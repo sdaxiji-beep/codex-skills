@@ -1,0 +1,11 @@
+generated/
+artifacts/
+keys/
+node_modules/
+mcp/**/node_modules/
+config/local-release.config.json
+*.log
+*.tmp
+*.bak
+*.orig
+*.jsonl

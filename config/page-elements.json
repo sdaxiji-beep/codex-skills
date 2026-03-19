@@ -1,0 +1,104 @@
+{
+  "pages/store/home/index": {
+    "name": "store_home",
+    "required_data": [
+      "products"
+    ],
+    "optional_data": [
+      "cartCount"
+    ],
+    "required_elements": [
+      ".product-item"
+    ],
+    "optional_elements": [
+      "image",
+      "button"
+    ],
+    "validation_rules": {
+      "products_not_empty": "products.length > 0",
+      "has_product_items": ".product-item count > 0"
+    }
+  },
+  "pages/store/detail/index": {
+    "name": "store_detail",
+    "required_data": [],
+    "required_elements": []
+  },
+  "pages/store/cart/index": {
+    "name": "store_cart",
+    "required_data": [
+      "cartItems"
+    ],
+    "required_elements": [
+      ".cart-item"
+    ],
+    "validation_rules": {
+      "cart_loaded": "cartItems exists"
+    }
+  },
+  "pages/store/checkout/index": {
+    "name": "store_checkout",
+    "required_data": [],
+    "required_elements": []
+  },
+  "pages/store/order_list/index": {
+    "name": "store_order_list",
+    "required_data": [],
+    "required_elements": []
+  },
+  "pages/store/order_detail/index": {
+    "name": "store_order_detail",
+    "required_data": [],
+    "required_elements": []
+  },
+  "pages/store/user/index": {
+    "name": "store_user",
+    "required_data": [],
+    "required_elements": []
+  },
+  "pages/store/address/index": {
+    "name": "store_address",
+    "required_data": [],
+    "required_elements": []
+  },
+  "pages/admin/login/index": {
+    "name": "admin_login",
+    "required_data": [],
+    "required_elements": []
+  },
+  "pages/admin/dashboard/index": {
+    "name": "admin_dashboard",
+    "required_data": [],
+    "required_elements": []
+  },
+  "pages/admin/skus/index": {
+    "name": "admin_skus",
+    "required_data": [],
+    "required_elements": []
+  },
+  "pages/admin/orders/index": {
+    "name": "admin_orders",
+    "required_data": [],
+    "required_elements": []
+  },
+  "pages/admin/order_detail/index": {
+    "name": "admin_order_detail",
+    "required_data": [],
+    "required_elements": []
+  },
+  "pages/admin/refunds/index": {
+    "name": "admin_refunds",
+    "required_data": [],
+    "required_elements": []
+  },
+  "pages/home/index": {
+    "name": "home",
+    "required_data": [],
+    "required_elements": []
+  },
+  "pages/ui_gemini/index": {
+    "name": "ui_gemini",
+    "required_data": [],
+    "required_elements": []
+  }
+}

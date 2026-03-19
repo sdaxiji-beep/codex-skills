@@ -1,0 +1,55 @@
+{
+  "task": {
+    "id": "task-127-lab-history-filter",
+    "title": "Add history filter to lab page",
+    "type": "feature"
+  },
+  "target": {
+    "files": [
+      {
+        "path": "G:\\codex测试\\miniprogram\\pages\\lab\\index.js",
+        "action": "modify"
+      },
+      {
+        "path": "G:\\codex测试\\miniprogram\\pages\\lab\\index.wxml",
+        "action": "modify"
+      },
+      {
+        "path": "G:\\codex测试\\miniprogram\\pages\\lab\\index.wxss",
+        "action": "modify"
+      }
+    ],
+    "deploy": {
+      "type": "none",
+      "functions": [],
+      "version": "1.0.0"
+    }
+  },
+  "requirements": {
+    "description": "Add a keyword filter input for recent history in the lab page and render only matching history rows while preserving existing run/refill actions.",
+    "acceptance": [
+      "History card shows a filter input field",
+      "History list reacts to filter text and only shows matching items",
+      "An explicit no-match hint appears when filter has no matches"
+    ],
+    "constraints": [
+      "Only modify the lab project under G:\\codex测试",
+      "Do not change production project files",
+      "Keep validation local to modified lab files"
+    ]
+  },
+  "validation": {
+    "layer": 0,
+    "command": "Push-Location 'G:\\codex测试\\miniprogram\\pages\\lab'; node --check '.\\\\index.js'; Pop-Location"
+  },
+  "record": {
+    "enabled": true,
+    "output_path": "artifacts\\records"
+  },
+  "rollback": {
+    "on_validate_fail": "restore_target_files",
+    "on_deploy_fail": "notify_only",
+    "on_write_fail": "abort"
+  },
+  "auto_mode": true
+}

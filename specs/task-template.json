@@ -1,0 +1,55 @@
+{
+  "task": {
+    "id": "task-xxx",
+    "title": "Task title",
+    "type": "feature|bugfix|refactor|deploy|preview"
+  },
+  "target": {
+    "files": [
+      {
+        "path": "D:\\luwei\\cloudfunctions\\xxx\\index.js",
+        "action": "modify|create"
+      }
+    ],
+    "deploy": {
+      "type": "none|preview|upload|cloud|cloud-all|cloud-changed",
+      "functions": [],
+      "version": "1.0.0"
+    }
+  },
+  "requirements": {
+    "description": "Describe the intended change.",
+    "acceptance": [
+      "Acceptance criterion 1",
+      "Acceptance criterion 2"
+    ],
+    "constraints": [
+      "Constraint 1",
+      "Constraint 2"
+    ]
+  },
+  "validation": {
+    "layer": 4,
+    "required_tests": []
+  },
+  "record": {
+    "enabled": true,
+    "output_path": "artifacts\\records",
+    "fields": [
+      "task_id",
+      "title",
+      "status",
+      "elapsed_s",
+      "validated",
+      "deployed",
+      "changes",
+      "timestamp"
+    ]
+  },
+  "rollback": {
+    "on_validate_fail": "restore_target_files",
+    "on_deploy_fail": "notify_only",
+    "on_write_fail": "abort"
+  },
+  "auto_mode": false
+}

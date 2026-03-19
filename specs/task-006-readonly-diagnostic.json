@@ -1,0 +1,42 @@
+{
+  "task": {
+    "id": "task-006-readonly-diagnostic",
+    "title": "Run a read-only cloud function inventory diagnostic",
+    "type": "diagnostic"
+  },
+  "target": {
+    "files": [],
+    "deploy": {
+      "type": "list-functions",
+      "functions": [],
+      "version": "1.0.0"
+    }
+  },
+  "requirements": {
+    "description": "Run a read-only diagnostic that lists cloud functions and records the result without modifying any business code.",
+    "acceptance": [
+      "Validation passes",
+      "Cloud function inventory is returned",
+      "No business code is modified"
+    ],
+    "constraints": [
+      "Read-only operation",
+      "Do not deploy or modify business code"
+    ]
+  },
+  "validation": {
+    "layer": 4,
+    "required_tests": []
+  },
+  "record": {
+    "enabled": true,
+    "output_path": "artifacts\\records"
+  },
+  "rollback": {
+    "on_validate_fail": "abort",
+    "on_deploy_fail": "notify_only"
+  },
+  "auto_mode": false,
+  "auto_write": true,
+  "auto_deploy": true
+}

@@ -1,0 +1,45 @@
+{
+  "task": {
+    "id": "task-117-lab-normalize-restore-status",
+    "title": "Normalize status text after restore actions",
+    "type": "refactor"
+  },
+  "target": {
+    "files": [
+      {
+        "path": "G:\\codex\u6d4b\u8bd5\\miniprogram\\pages\\lab\\index.js",
+        "action": "modify"
+      }
+    ],
+    "deploy": {
+      "type": "none",
+      "functions": [],
+      "version": "1.0.0"
+    }
+  },
+  "requirements": {
+    "description": "After using latest history input or summary input, set statusText back to \"Ready to call helloLab.\" to keep the UI consistent.",
+    "acceptance": [
+      "Use latest input sets statusText to Ready to call helloLab.",
+      "Use summary input sets statusText to Ready to call helloLab."
+    ],
+    "constraints": [
+      "Only modify the lab project under G:\\codex\u6d4b\u8bd5",
+      "Do not change any production project files"
+    ]
+  },
+  "validation": {
+    "layer": 0,
+    "command": "node --check \"G:\\codex\u6d4b\u8bd5\\miniprogram\\pages\\lab\\index.js\""
+  },
+  "record": {
+    "enabled": true,
+    "output_path": "artifacts\\records"
+  },
+  "rollback": {
+    "on_validate_fail": "restore_target_files",
+    "on_deploy_fail": "notify_only",
+    "on_write_fail": "abort"
+  },
+  "auto_mode": true
+}

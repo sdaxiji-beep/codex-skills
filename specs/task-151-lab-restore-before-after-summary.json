@@ -1,0 +1,46 @@
+{
+  "task": {
+    "id": "task-151",
+    "title": "Lab restore validation before-after summary",
+    "type": "feature"
+  },
+  "target": {
+    "files": [
+      {
+        "path": "G:\\codex测试\\miniprogram\\pages\\lab\\index.js",
+        "action": "modify"
+      }
+    ],
+    "deploy": {
+      "type": "none",
+      "functions": [],
+      "version": "1.0.0"
+    }
+  },
+  "requirements": {
+    "description": "When restoring validation defaults, show before/after one-line summary with score delta.",
+    "acceptance": [
+      "Restore action includes before and after validation summary in status line",
+      "Summary contains status, score and checks",
+      "Status line includes score_delta"
+    ],
+    "constraints": [
+      "Only modify G:\\codex测试",
+      "Never touch D:\\卤味"
+    ]
+  },
+  "validation": {
+    "layer": 4,
+    "required_tests": []
+  },
+  "record": {
+    "enabled": true,
+    "output_path": "G:\\codex专属\\artifacts\\records"
+  },
+  "rollback": {
+    "on_validate_fail": "restore_target_files",
+    "on_deploy_fail": "notify_only",
+    "on_write_fail": "abort"
+  },
+  "auto_mode": false
+}

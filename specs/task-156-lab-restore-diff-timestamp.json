@@ -1,0 +1,50 @@
+{
+  "task": {
+    "id": "task-156",
+    "title": "Lab add restore diff timestamp",
+    "type": "feature"
+  },
+  "target": {
+    "files": [
+      {
+        "path": "G:\\codex测试\\miniprogram\\pages\\lab\\index.js",
+        "action": "modify"
+      },
+      {
+        "path": "G:\\codex测试\\miniprogram\\pages\\lab\\index.wxml",
+        "action": "modify"
+      }
+    ],
+    "deploy": {
+      "type": "none",
+      "functions": [],
+      "version": "1.0.0"
+    }
+  },
+  "requirements": {
+    "description": "Track restore timestamp and include it in restore card and all restore-related copy exports.",
+    "acceptance": [
+      "Restore operation records ISO timestamp in page state",
+      "Imported validation card shows restore timestamp with restore diff",
+      "Summary and restore copy exports include restore_at field"
+    ],
+    "constraints": [
+      "Only modify G:\\codex测试",
+      "Never touch D:\\卤味"
+    ]
+  },
+  "validation": {
+    "layer": 4,
+    "required_tests": []
+  },
+  "record": {
+    "enabled": true,
+    "output_path": "G:\\codex专属\\artifacts\\records"
+  },
+  "rollback": {
+    "on_validate_fail": "restore_target_files",
+    "on_deploy_fail": "notify_only",
+    "on_write_fail": "abort"
+  },
+  "auto_mode": false
+}

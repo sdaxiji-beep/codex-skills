@@ -1,0 +1,70 @@
+﻿{
+    "task":  {
+                 "id":  "task-110-lab-history-badge",
+                 "title":  "Add latest badge for the most recent history item",
+                 "type":  "feature"
+             },
+    "target":  {
+                   "files":  [
+                                 {
+                                     "path":  "G:\\codex测试\\miniprogram\\pages\\lab\\index.wxml",
+                                     "action":  "modify"
+                                 },
+                                 {
+                                     "path":  "G:\\codex测试\\miniprogram\\pages\\lab\\index.wxss",
+                                     "action":  "modify"
+                                 }
+                             ],
+                   "new_contents":  [
+                                        "\u003cview class=\"page\"\u003e\n  \u003cview class=\"hero\"\u003e\n    \u003ctext class=\"title\"\u003e{{title}}\u003c/text\u003e\n    \u003ctext class=\"description\"\u003e{{description}}\u003c/text\u003e\n  \u003c/view\u003e\n\n  \u003cview class=\"stack\"\u003e\n    \u003cblock wx:for=\"{{modules}}\" wx:key=\"name\"\u003e\n      \u003cview class=\"module\"\u003e\n        \u003ctext class=\"module-name\"\u003e{{item.name}}\u003c/text\u003e\n        \u003ctext class=\"module-status\"\u003e{{item.status}}\u003c/text\u003e\n      \u003c/view\u003e\n    \u003c/block\u003e\n  \u003c/view\u003e\n\n  \u003cview class=\"action-card\"\u003e\n    \u003ctext class=\"action-title\"\u003eCloud Function Check\u003c/text\u003e\n    \u003ctext class=\"action-desc\"\u003e{{statusText}}\u003c/text\u003e\n    \u003ctext class=\"meta-line\"\u003ecall count: {{callCount}}\u003c/text\u003e\n    \u003ctext wx:if=\"{{lastMessage}}\" class=\"meta-line\"\u003elast message: {{lastMessage}}\u003c/text\u003e\n    \u003cview class=\"preset-row\"\u003e\n      \u003cblock wx:for=\"{{presets}}\" wx:key=\"label\"\u003e\n        \u003cview class=\"preset-chip {{selectedPreset === item.value ? \u0027preset-chip-active\u0027 : \u0027\u0027}}\"\u003e\n          \u003cbutton\n            class=\"preset-button {{selectedPreset === item.value ? \u0027preset-button-active\u0027 : \u0027\u0027}}\"\n            data-value=\"{{item.value}}\"\n            bindtap=\"fillPreset\"\n            disabled=\"{{loading}}\"\n          \u003e\n            {{item.label}}\n          \u003c/button\u003e\n          \u003cbutton\n            wx:if=\"{{!item.builtin}}\"\n            class=\"preset-remove\"\n            data-value=\"{{item.value}}\"\n            bindtap=\"removePreset\"\n            disabled=\"{{loading}}\"\n          \u003e\n            x\n          \u003c/button\u003e\n        \u003c/view\u003e\n      \u003c/block\u003e\n    \u003c/view\u003e\n    \u003cinput\n      class=\"input\"\n      type=\"text\"\n      value=\"{{inputValue}}\"\n      placeholder=\"Type something to echo\"\n      bindinput=\"handleInputChange\"\n    /\u003e\n    \u003cbutton class=\"action-button\" bindtap=\"callHelloLab\" loading=\"{{loading}}\"\u003e\n      Call helloLab\n    \u003c/button\u003e\n    \u003cbutton class=\"ghost-button\" bindtap=\"saveCurrentAsPreset\" disabled=\"{{loading}}\"\u003e\n      Save as preset\n    \u003c/button\u003e\n    \u003cbutton class=\"ghost-button\" bindtap=\"renameSelectedPreset\" disabled=\"{{loading}}\"\u003e\n      Rename selected preset\n    \u003c/button\u003e\n    \u003cbutton class=\"ghost-button\" bindtap=\"restoreDefaultPreset\" disabled=\"{{loading}}\"\u003e\n      Restore default preset\n    \u003c/button\u003e\n    \u003cbutton class=\"ghost-button\" bindtap=\"clearResult\" disabled=\"{{loading}}\"\u003e\n      Clear result\n    \u003c/button\u003e\n  \u003c/view\u003e\n\n  \u003cview wx:if=\"{{lastSuccess}}\" class=\"summary-card\"\u003e\n    \u003ctext class=\"result-title\"\u003eLast successful run\u003c/text\u003e\n    \u003ctext class=\"result-line\"\u003einput: {{lastSuccess.input}}\u003c/text\u003e\n    \u003ctext class=\"result-line\"\u003emessage: {{lastSuccess.message}}\u003c/text\u003e\n    \u003ctext class=\"result-line\"\u003etimestamp: {{lastSuccess.timestamp}}\u003c/text\u003e\n    \u003cbutton class=\"ghost-button summary-button\" bindtap=\"useLastSuccessInput\" disabled=\"{{loading}}\"\u003e\n      Use summary input\n    \u003c/button\u003e\n    \u003cbutton class=\"ghost-button summary-button\" bindtap=\"saveSummaryAsPreset\" disabled=\"{{loading}}\"\u003e\n      Save summary as preset\n    \u003c/button\u003e\n    \u003cbutton class=\"ghost-button summary-button\" bindtap=\"clearLastSuccess\" disabled=\"{{loading}}\"\u003e\n      Clear summary\n    \u003c/button\u003e\n  \u003c/view\u003e\n\n  \u003cview wx:if=\"{{result}}\" class=\"result-card\"\u003e\n    \u003ctext class=\"result-title\"\u003eResult\u003c/text\u003e\n    \u003ctext class=\"result-line\"\u003ecode: {{result.code}}\u003c/text\u003e\n    \u003ctext class=\"result-line\"\u003emsg: {{result.msg}}\u003c/text\u003e\n    \u003ctext wx:if=\"{{result.data}}\" class=\"result-line\"\u003emessage: {{result.data.message}}\u003c/text\u003e\n    \u003ctext wx:if=\"{{result.data \u0026\u0026 result.data.echo}}\" class=\"result-line\"\u003einput: {{result.data.echo.input}}\u003c/text\u003e\n    \u003ctext wx:if=\"{{result.data \u0026\u0026 result.data.echo}}\" class=\"result-line\"\u003esource: {{result.data.echo.source}}\u003c/text\u003e\n    \u003ctext wx:if=\"{{result.data}}\" class=\"result-line\"\u003etimestamp: {{result.data.timestamp}}\u003c/text\u003e\n  \u003c/view\u003e\n\n  \u003cview wx:if=\"{{history.length}}\" class=\"history-card\"\u003e\n    \u003ctext class=\"result-title\"\u003eRecent inputs\u003c/text\u003e\n    \u003cbutton class=\"ghost-button history-button\" bindtap=\"clearHistory\" disabled=\"{{loading}}\"\u003e\n      Clear history\n    \u003c/button\u003e\n    \u003cbutton class=\"ghost-button history-button\" bindtap=\"useLatestHistoryInput\" disabled=\"{{loading || !history.length}}\"\u003e\n      Use latest input\n    \u003c/button\u003e\n    \u003cblock wx:for=\"{{history}}\" wx:key=\"timestamp\"\u003e\n      \u003cview class=\"history-row\"\u003e\n        \u003cview class=\"history-main\" data-value=\"{{item.input}}\" bindtap=\"refillFromHistory\"\u003e\n          \u003ctext class=\"history-input\"\u003e{{item.input}}\u003c/text\u003e\n          \u003ctext class=\"history-time\"\u003e{{item.timestamp}}\u003c/text\u003e\n          \u003ctext wx:if=\"{{index === 0}}\" class=\"history-badge\"\u003elatest\u003c/text\u003e\n        \u003c/view\u003e\n        \u003cbutton\n          class=\"history-run-button\"\n          data-value=\"{{item.input}}\"\n          bindtap=\"rerunHistory\"\n          disabled=\"{{loading}}\"\n        \u003e\n          Run again\n        \u003c/button\u003e\n      \u003c/view\u003e\n    \u003c/block\u003e\n  \u003c/view\u003e\n  \u003cview wx:else class=\"history-card history-empty\"\u003e\n    \u003ctext class=\"result-title\"\u003eRecent inputs\u003c/text\u003e\n    \u003ctext class=\"result-line\"\u003eRun helloLab once to populate history.\u003c/text\u003e\n  \u003c/view\u003e\n\u003c/view\u003e\n\r\n\r\n\r\n\r\n\r\n",
+                                        ".page {\n  min-height: 100vh;\n  padding: 40rpx 32rpx;\n  background: #f8fafc;\n  box-sizing: border-box;\n}\n\n.hero {\n  margin-bottom: 28rpx;\n}\n\n.title {\n  display: block;\n  font-size: 40rpx;\n  font-weight: 700;\n  margin-bottom: 10rpx;\n}\n\n.description {\n  display: block;\n  color: #475569;\n  font-size: 26rpx;\n  line-height: 1.6;\n}\n\n.stack {\n  display: flex;\n  flex-direction: column;\n  gap: 20rpx;\n  margin-bottom: 28rpx;\n}\n\n.module {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 22rpx 24rpx;\n  background: #ffffff;\n  border-radius: 20rpx;\n  box-shadow: 0 12rpx 32rpx rgba(15, 23, 42, 0.06);\n}\n\n.module-name {\n  font-size: 28rpx;\n}\n\n.module-status {\n  font-size: 24rpx;\n  color: #0f766e;\n  text-transform: uppercase;\n}\n\n.action-card,\n.summary-card,\n.result-card,\n.history-card {\n  background: #ffffff;\n  border-radius: 20rpx;\n  padding: 24rpx;\n  box-shadow: 0 12rpx 32rpx rgba(15, 23, 42, 0.06);\n  margin-bottom: 24rpx;\n}\n\n.action-title,\n.result-title {\n  display: block;\n  font-size: 30rpx;\n  font-weight: 600;\n  margin-bottom: 12rpx;\n}\n\n.action-desc,\n.result-line {\n  display: block;\n  font-size: 26rpx;\n  color: #475569;\n  line-height: 1.7;\n}\n\n.meta-line {\n  display: block;\n  margin-top: 8rpx;\n  font-size: 24rpx;\n  color: #334155;\n}\n\n.preset-row {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 14rpx;\n  margin-top: 18rpx;\n}\n\n.preset-chip {\n  display: flex;\n  align-items: center;\n  gap: 8rpx;\n  padding-right: 10rpx;\n  background: #e2e8f0;\n  border-radius: 999rpx;\n}\n\n.preset-chip-active {\n  background: #0f172a;\n}\n\n.preset-button {\n  margin: 0;\n  padding: 0 24rpx;\n  min-width: 0;\n  line-height: 1.9;\n  background: transparent;\n  color: #0f172a;\n  border-radius: 999rpx;\n  font-size: 24rpx;\n}\n\n.preset-button-active {\n  color: #ffffff;\n}\n\n.preset-remove {\n  margin: 0;\n  min-width: 40rpx;\n  padding: 0 10rpx;\n  line-height: 1.6;\n  background: transparent;\n  color: #475569;\n  border-radius: 999rpx;\n  font-size: 22rpx;\n}\n\n.preset-chip-active .preset-remove {\n  color: #cbd5e1;\n}\n\n.input {\n  width: 100%;\n  margin-top: 18rpx;\n  padding: 18rpx 20rpx;\n  border: 1rpx solid #cbd5e1;\n  border-radius: 16rpx;\n  background: #f8fafc;\n  box-sizing: border-box;\n  font-size: 26rpx;\n}\n\n.action-button {\n  margin-top: 20rpx;\n  background: #0f172a;\n  color: #ffffff;\n  border-radius: 999rpx;\n  font-size: 28rpx;\n}\n\n.ghost-button {\n  margin-top: 16rpx;\n  background: #ffffff;\n  color: #0f172a;\n  border: 1rpx solid #cbd5e1;\n  border-radius: 999rpx;\n  font-size: 28rpx;\n}\n\n.history-button {\n  margin-top: 0;\n  margin-bottom: 16rpx;\n}\n\n.summary-button {\n  margin-top: 18rpx;\n}\n\n.history-row {\n  display: flex;\n  align-items: center;\n  gap: 18rpx;\n  padding: 14rpx 0;\n  border-top: 1rpx solid #e5e7eb;\n}\n\n.history-row:first-of-type {\n  border-top: 0;\n}\n\n.history-main {\n  flex: 1;\n}\n\n.history-input,\n.history-time {\n  display: block;\n  font-size: 24rpx;\n  line-height: 1.6;\n}\n\n.history-input {\n  color: #0f172a;\n}\n\n.history-time {\n  color: #64748b;\n}\n\n.history-badge {\n  margin-top: 6rpx;\n  display: inline-flex;\n  align-items: center;\n  padding: 2rpx 14rpx;\n  border-radius: 999px;\n  background: #203040;\n  color: #eaf2fb;\n  font-size: 18rpx;\n  text-transform: uppercase;\n  letter-spacing: 0.08em;\n}\n\n.history-run-button {\n  margin: 0;\n  padding: 0 22rpx;\n  min-width: 0;\n  line-height: 1.8;\n  background: #ffffff;\n  color: #0f172a;\n  border: 1rpx solid #cbd5e1;\n  border-radius: 999rpx;\n  font-size: 22rpx;\n}\n"
+                                    ],
+                   "deploy":  {
+                                  "type":  "none",
+                                  "functions":  [
+
+                                                ],
+                                  "version":  "1.0.0"
+                              }
+               },
+    "requirements":  {
+                         "description":  "Highlight the newest history row with a latest badge so users can spot the most recent input quickly.",
+                         "acceptance":  [
+                                            "The most recent history row shows a latest badge.",
+                                            "Other rows do not show the badge."
+                                        ],
+                         "constraints":  [
+                                             "Only modify G:\\codex测试 files.",
+                                             "Do not change deployment behavior."
+                                         ]
+                     },
+    "validation":  {
+                       "layer":  0,
+                       "command":  "node --check \"G:\\codex测试\\miniprogram\\pages\\lab\\index.js\"",
+                       "required_tests":  [
+
+                                          ]
+                   },
+    "record":  {
+                   "enabled":  true,
+                   "output_path":  "artifacts\\records",
+                   "fields":  [
+                                  "task_id",
+                                  "title",
+                                  "status",
+                                  "elapsed_s",
+                                  "validated",
+                                  "deployed",
+                                  "changes",
+                                  "timestamp"
+                              ]
+               },
+    "rollback":  {
+                     "on_validate_fail":  "restore_target_files",
+                     "on_deploy_fail":  "notify_only",
+                     "on_write_fail":  "abort"
+                 },
+    "auto_mode":  true,
+    "auto_write":  true,
+    "auto_deploy":  true
+}

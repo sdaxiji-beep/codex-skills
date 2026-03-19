@@ -1,0 +1,13 @@
+{
+  "name": "wechat-devtools-auto-validation",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Rebuilt WeChat DevTools readonly automation skill workspace",
+  "main": "probe-automator.js",
+  "scripts": {
+    "probe": "node probe-automator.js"
+  },
+  "dependencies": {
+    "miniprogram-automator": "^0.12.1"
+  }
+}

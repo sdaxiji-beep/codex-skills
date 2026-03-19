@@ -1,0 +1,59 @@
+{
+  "task": {
+    "id": "task-202-sandbox-create-file",
+    "title": "Sandbox create JS file and validate",
+    "type": "feature"
+  },
+  "target": {
+    "files": [
+      {
+        "path": "sandbox\\fake-project\\dispatcher-created.js",
+        "action": "create"
+      }
+    ],
+    "new_content": "// created by sandbox dispatcher task 202",
+    "deploy": {
+      "type": "none",
+      "functions": [],
+      "version": "1.0.0"
+    }
+  },
+  "requirements": {
+    "description": "Create one JS file in sandbox and validate file existence.",
+    "acceptance": [
+      "dispatcher-created.js exists in .\\sandbox\\fake-project",
+      "validation command exits 0"
+    ],
+    "constraints": [
+      "sandbox only",
+      "no deployment"
+    ]
+  },
+  "validation": {
+    "layer": 0,
+    "command": "if (Test-Path '.\\sandbox\\fake-project\\dispatcher-created.js') { exit 0 } else { exit 1 }",
+    "required_tests": []
+  },
+  "record": {
+    "enabled": true,
+    "output_path": "artifacts\\records",
+    "fields": [
+      "task_id",
+      "title",
+      "status",
+      "elapsed_s",
+      "validated",
+      "deployed",
+      "changes",
+      "timestamp"
+    ]
+  },
+  "rollback": {
+    "on_validate_fail": "restore_target_files",
+    "on_deploy_fail": "notify_only",
+    "on_write_fail": "abort"
+  },
+  "auto_mode": true,
+  "auto_write": true,
+  "auto_deploy": true
+}

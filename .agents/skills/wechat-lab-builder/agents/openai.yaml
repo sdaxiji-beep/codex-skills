@@ -1,0 +1,5 @@
+interface:
+  display_name: "WeChat Lab Builder"
+  short_description: "Safe sandbox-only experimentation flow that avoids production project writes."
+  default_prompt: "Use $wechat-lab-builder to implement and test an experiment only in sandbox paths."
+
