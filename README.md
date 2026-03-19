@@ -1,17 +1,23 @@
 # codex_skills
 
-Standalone WeChat skill workspace extracted from `G:\codex专属`.
+Codex skill workspace for building WeChat Mini Programs from natural language.
 
-This repo is for Codex users who want reusable WeChat Mini Program skills together with the supporting scripts and templates those skills expect.
+Use this repo when you want Codex to:
+- create a mini program from a prompt
+- run environment checks before work starts
+- preview generated projects in WeChat DevTools
+- keep real upload/deploy guarded behind a local release setup
 
-## Environment
+This repo is a standalone workspace copied from the original workspace and packaged so the skills, scripts, templates, and validation flow work together.
+
+## Requirements
 
 - Windows
 - PowerShell
 - WeChat DevTools installed locally
 - Codex desktop or another Codex environment that can read local skill folders
 
-## What this repo contains
+## What Is Included
 
 - `/.agents/skills/`
   - `wechat-devtools-control`
@@ -23,7 +29,7 @@ This repo is for Codex users who want reusable WeChat Mini Program skills togeth
 - `/config`
 - `/mcp` copied without `node_modules`
 
-## What this repo does not include
+## What Is Not Included
 
 - `/generated`
 - `/artifacts`
@@ -31,7 +37,20 @@ This repo is for Codex users who want reusable WeChat Mini Program skills togeth
 - runtime cache
 - local audit output
 
-## Install options
+## Quick Start
+
+```powershell
+cd G:\codex_skills
+$RepoRoot = (Get-Location).Path
+. (Join-Path $RepoRoot "scripts\wechat.ps1")
+Invoke-WechatBootstrap
+Invoke-WechatDoctor
+Invoke-WechatCreate -Prompt "build a notebook mini program" -Open $true -Preview $true
+```
+
+That sequence is the shortest path from prompt to preview.
+
+## Install Options
 
 ### Option A: Use this repo as a full workspace
 
@@ -64,7 +83,7 @@ Copy these folders into your Codex skills directory:
 
 If you install only the skill folders but not the supporting workspace, the skills may load correctly but fail at runtime because the expected local scripts are missing.
 
-## Recommended usage
+## Recommended Usage
 
 For normal use, do not memorize commands. Ask Codex in natural language, for example:
 
@@ -74,7 +93,7 @@ For normal use, do not memorize commands. Ask Codex in natural language, for exa
 
 The commands remain available for debugging, documentation, or manual operation.
 
-## Validate skills
+## Validate Skills
 
 ```powershell
 python "C:\Users\Laptop\.codex\skills\.system\skill-creator\scripts\quick_validate.py" `
@@ -87,7 +106,7 @@ python "C:\Users\Laptop\.codex\skills\.system\skill-creator\scripts\quick_valida
   "G:\codex_skills\.agents\skills\wechat-lab-builder"
 ```
 
-## Default behavior
+## Default Behavior
 
 - Generated projects are preview-first by default.
 - `touristappid` projects stay blocked from upload and deploy.

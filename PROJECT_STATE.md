@@ -28,6 +28,7 @@ Package this workspace as a clean standalone skill repo without touching `G:\cod
 - doctor runtime now resolves CLI path correctly; remaining doctor warnings are environment-level:
   - DevTools open API unreachable on current port
   - local release setup not yet created in this shared workspace
+- README homepage copy refreshed to emphasize prompt-to-preview flow and clearer install paths
 
 ## Next
 - optional: remove non-skill root files that are not needed for sharing
