@@ -9,3 +9,5 @@ config/local-release.config.json
 *.bak
 *.orig
 *.jsonl
+
+deploy-config.json
