@@ -40,7 +40,7 @@ This repo is a standalone workspace copied from the original workspace and packa
 ## Quick Start
 
 ```powershell
-cd G:\codex_skills
+cd <your-cloned-repo-path>
 $RepoRoot = (Get-Location).Path
 . (Join-Path $RepoRoot "scripts\wechat.ps1")
 Invoke-WechatBootstrap
@@ -48,7 +48,7 @@ Invoke-WechatDoctor
 Invoke-WechatCreate -Prompt "build a notebook mini program" -Open $true -Preview $true
 ```
 
-That sequence is the shortest path from prompt to preview.
+That sequence is the shortest path from prompt to preview. The repo does not need to live on `G:` as long as you run the commands from the cloned workspace root.
 
 ## Install Options
 
@@ -57,7 +57,7 @@ That sequence is the shortest path from prompt to preview.
 Recommended if you want the skills and the scripts/templates to work together immediately.
 
 ```powershell
-cd G:\codex_skills
+cd <your-cloned-repo-path>
 $RepoRoot = (Get-Location).Path
 . (Join-Path $RepoRoot "scripts\wechat.ps1")
 ```
@@ -76,10 +76,10 @@ Use this only if you already have an equivalent local workspace with matching `s
 
 Copy these folders into your Codex skills directory:
 
-- `G:\codex_skills\.agents\skills\wechat-devtools-control`
-- `G:\codex_skills\.agents\skills\wechat-release-guard`
-- `G:\codex_skills\.agents\skills\wechat-spec-executor`
-- `G:\codex_skills\.agents\skills\wechat-lab-builder`
+- `<repo-root>\.agents\skills\wechat-devtools-control`
+- `<repo-root>\.agents\skills\wechat-release-guard`
+- `<repo-root>\.agents\skills\wechat-spec-executor`
+- `<repo-root>\.agents\skills\wechat-lab-builder`
 
 If you install only the skill folders but not the supporting workspace, the skills may load correctly but fail at runtime because the expected local scripts are missing.
 
@@ -96,14 +96,13 @@ The commands remain available for debugging, documentation, or manual operation.
 ## Validate Skills
 
 ```powershell
-python "C:\Users\Laptop\.codex\skills\.system\skill-creator\scripts\quick_validate.py" `
-  "G:\codex_skills\.agents\skills\wechat-devtools-control"
-python "C:\Users\Laptop\.codex\skills\.system\skill-creator\scripts\quick_validate.py" `
-  "G:\codex_skills\.agents\skills\wechat-release-guard"
-python "C:\Users\Laptop\.codex\skills\.system\skill-creator\scripts\quick_validate.py" `
-  "G:\codex_skills\.agents\skills\wechat-spec-executor"
-python "C:\Users\Laptop\.codex\skills\.system\skill-creator\scripts\quick_validate.py" `
-  "G:\codex_skills\.agents\skills\wechat-lab-builder"
+$RepoRoot = (Get-Location).Path
+$Validator = "<path-to-your-Codex-skill-creator>\\scripts\\quick_validate.py"
+
+python $Validator (Join-Path $RepoRoot ".agents\skills\wechat-devtools-control")
+python $Validator (Join-Path $RepoRoot ".agents\skills\wechat-release-guard")
+python $Validator (Join-Path $RepoRoot ".agents\skills\wechat-spec-executor")
+python $Validator (Join-Path $RepoRoot ".agents\skills\wechat-lab-builder")
 ```
 
 ## Default Behavior

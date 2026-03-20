@@ -29,6 +29,7 @@ Package this workspace as a clean standalone skill repo without touching `G:\cod
   - DevTools open API unreachable on current port
   - local release setup not yet created in this shared workspace
 - README homepage copy refreshed to emphasize prompt-to-preview flow and clearer install paths
+- README portability fixed: removed hardcoded repo drive path and replaced validator machine path with placeholders
 
 ## Next
 - optional: remove non-skill root files that are not needed for sharing
