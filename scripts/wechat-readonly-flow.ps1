@@ -1,4 +1,4 @@
-[CmdletBinding()]
+﻿[CmdletBinding()]
 param(
     [ValidateSet('ok', 'skipped', 'failed')]
     [string]$Variant = 'ok',
@@ -15,7 +15,7 @@ function Get-WechatCliPath {
         return $candidate
     }
 
-    return 'C:\Program Files (x86)\Tencent\微信web开发者工具\cli.bat'
+    return 'C:\Program Files (x86)\Tencent\寰俊web寮€鍙戣€呭伐鍏穃cli.bat'
 }
 
 function Get-WorkspaceRoot {
@@ -75,7 +75,7 @@ function Invoke-ExternalCommand {
 
 function Ensure-AutomatorPort {
     param(
-        [string]$ProjectPath = 'D:\卤味',
+        [string]$ProjectPath = (Join-Path (Get-WorkspaceRoot) 'sandbox\fake-project'),
         [int]$AutoPort = 9420
     )
 
@@ -114,7 +114,7 @@ function Ensure-AutomatorPort {
 
 function Get-AutomatorPageInfo {
     param(
-        [string]$ProjectPath = 'D:\卤味',
+        [string]$ProjectPath = (Join-Path (Get-WorkspaceRoot) 'sandbox\fake-project'),
         [int]$AutoPort = 9420
     )
 
@@ -436,7 +436,7 @@ function New-FlowResult {
 function Invoke-FlowViaAutomator {
     [CmdletBinding()]
     param(
-        [string]$ProjectPath = 'D:\卤味',
+        [string]$ProjectPath = (Join-Path (Get-WorkspaceRoot) 'sandbox\fake-project'),
         [ValidateSet('ok', 'skipped', 'failed')]
         [string]$Variant = 'ok'
     )
@@ -488,3 +488,4 @@ if ($MyInvocation.InvocationName -ne '.') {
         $result
     }
 }
+

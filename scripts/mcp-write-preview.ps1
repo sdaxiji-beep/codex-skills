@@ -1,5 +1,7 @@
-[CmdletBinding()]
+﻿[CmdletBinding()]
 param()
+
+. "$PSScriptRoot\wechat-release-setup.ps1"
 
 function New-McpPreviewResponse {
     param(
@@ -28,26 +30,16 @@ function Test-McpPreviewAllowlist {
 
     $candidate = [System.IO.Path]::GetFullPath($ProjectPath)
     $repoRoot = Split-Path $PSScriptRoot -Parent
-    $deployConfigPath = Join-Path $repoRoot 'deploy-config.json'
-    $realProjectRoot = $null
-    if (Test-Path $deployConfigPath) {
-        try {
-            $deployConfig = Get-Content $deployConfigPath -Raw | ConvertFrom-Json -ErrorAction Stop
-            if ($deployConfig.projectRoot) {
-                $realProjectRoot = [System.IO.Path]::GetFullPath([string]$deployConfig.projectRoot)
-            }
-        }
-        catch {
+    $allowedRoots = @([System.IO.Path]::GetFullPath((Join-Path $repoRoot 'sandbox')))
+    try {
+        $config = Get-EffectiveDeployConfig -WorkspaceRoot $repoRoot
+        if ($config -and -not [string]::IsNullOrWhiteSpace([string]$config.projectRoot) -and (Test-Path [string]$config.projectRoot)) {
+            $allowedRoots += [System.IO.Path]::GetFullPath([string]$config.projectRoot)
         }
     }
-    if (-not $realProjectRoot) {
-        $realProjectRoot = [System.IO.Path]::GetFullPath('D:\luwei')
+    catch {
     }
-
-    $allowedRoots = @(
-        [System.IO.Path]::GetFullPath((Join-Path $repoRoot 'sandbox')),
-        $realProjectRoot
-    )
+    $allowedRoots = @($allowedRoots | Select-Object -Unique)
 
     foreach ($root in $allowedRoots) {
         if ($candidate.StartsWith($root, [System.StringComparison]::OrdinalIgnoreCase)) {
@@ -297,3 +289,4 @@ function Invoke-McpPreviewProject {
     $response.audit = $audit
     return $response
 }
+

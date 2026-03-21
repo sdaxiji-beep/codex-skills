@@ -1,4 +1,4 @@
-{
+﻿{
   "name": "wechat-devtools-mcp",
   "version": "1.0.0",
   "kind": "readonly",
@@ -16,6 +16,6 @@
   "deploy_enabled": false,
   "registration": {
     "default": false,
-    "local_config": "G:\\codex专属\\.agent\\mcps.json"
+    "local_config": "<repo-root>\\.agent\\mcps.json"
   }
 }

@@ -116,7 +116,8 @@ function Invoke-AgenticValidation {
 
     $pageState = $null
     try {
-        $probeRaw = (& node "G:\codex涓撳睘\probe-automator.js" 2>$null | Out-String).Trim()
+        $probeScript = Join-Path (Split-Path $PSScriptRoot -Parent) 'probe-automator.js'
+        $probeRaw = (& node $probeScript 2>$null | Out-String).Trim()
         if ($probeRaw) {
             $pageState = $probeRaw | ConvertFrom-Json -ErrorAction SilentlyContinue
         }
@@ -168,10 +169,6 @@ function Get-AgenticProjectRoot {
         $candidate = $parent
     }
 
-    if ($resolvedTarget -like 'D:\卤味\*') {
-        return 'D:\卤味'
-    }
-
     return $script:SandboxProjectPath
 }
 
@@ -183,10 +180,6 @@ function Resolve-AgenticTargetPath {
     }
 
     $repoRoot = Split-Path $PSScriptRoot -Parent
-
-    if ($TargetFile -like 'D:\luwei\*') {
-        return ($TargetFile -replace '^D:\\luwei', 'D:\卤味')
-    }
 
     if (-not [System.IO.Path]::IsPathRooted($TargetFile)) {
         return [System.IO.Path]::GetFullPath((Join-Path $repoRoot $TargetFile))
@@ -570,9 +563,9 @@ function Invoke-AgenticLoop {
     if (-not $validated) {
         if (
             ($writeResult.status -eq 'success') -and
-            (@($resolvedTargetFiles | Where-Object { $_ -like 'D:\卤味\*' }).Count -gt 0)
+            (@($resolvedTargetFiles | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }).Count -gt 0)
         ) {
-            Write-Host "[LOOP] validation failed, rolling back target file in D:\卤味"
+            Write-Host "[LOOP] validation failed, running rollback for target files"
             $projectPath = Get-AgenticProjectRoot -TargetFile $resolvedTargetFile
             $validationFailurePolicy = if ($RollbackConfig -and $RollbackConfig.on_validate_fail) {
                 [string]$RollbackConfig.on_validate_fail
@@ -637,7 +630,7 @@ function Invoke-AgenticLoop {
                 $config = Get-DeployConfig
                 $root = $config.cloudFunctionRoot
                 $changed = @()
-                if (Test-Path $root) {
+                if (-not [string]::IsNullOrWhiteSpace($root) -and (Test-Path $root)) {
                     $projectPath = Split-Path $root -Parent
                     $gitResult = Invoke-GitProjectCommand -ProjectPath $projectPath -GitArguments @('status', '--short', '--', $root)
                     if ($gitResult.output) {
@@ -668,7 +661,7 @@ function Invoke-AgenticLoop {
         if (
             ($deployResult.status -eq 'failed') -and
             ($writeResult.status -eq 'success') -and
-            (@($resolvedTargetFiles | Where-Object { $_ -like 'D:\卤味\*' }).Count -gt 0)
+            (@($resolvedTargetFiles | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }).Count -gt 0)
         ) {
             $projectPath = Get-AgenticProjectRoot -TargetFile $resolvedTargetFile
             $deployFailurePolicy = if ($RollbackConfig -and $RollbackConfig.on_deploy_fail) {
@@ -744,10 +737,7 @@ function Invoke-AgenticLoopFromSpec {
     else {
         ''
     }
-    $pathAliases = @{
-        'D:\luwei\' = 'D:\卤味\'
-        'D:/luwei/' = 'D:/卤味/'
-    }
+    $pathAliases = @{}
     foreach ($alias in $pathAliases.Keys) {
         $firstFile = $firstFile -replace [regex]::Escape($alias), $pathAliases[$alias]
     }
@@ -760,6 +750,12 @@ function Invoke-AgenticLoopFromSpec {
             }
             $resolvedTargetFiles += $mappedPath
         }
+    }
+    if ([string]::IsNullOrWhiteSpace($firstFile)) {
+        $firstFile = Join-Path (Split-Path $PSScriptRoot -Parent) 'sandbox\external-project\app.js'
+    }
+    if (@($resolvedTargetFiles).Count -eq 0) {
+        $resolvedTargetFiles = @($firstFile)
     }
     Write-Verbose "[SPEC] mapped target file: $firstFile"
     $description = if ($spec.requirements -and $spec.requirements.description) {

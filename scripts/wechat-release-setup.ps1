@@ -62,11 +62,10 @@ function Get-EffectiveDeployConfig {
         [string]$WorkspaceRoot = (Get-ReleaseWorkspaceRoot)
     )
 
-    if (-not (Test-Path $ConfigPath)) {
-        throw "deploy config not found: $ConfigPath"
+    $base = $null
+    if (Test-Path $ConfigPath) {
+        $base = Get-Content $ConfigPath -Raw | ConvertFrom-Json
     }
-
-    $base = Get-Content $ConfigPath -Raw | ConvertFrom-Json
     $local = Get-LocalReleaseConfig -WorkspaceRoot $WorkspaceRoot
     return (Merge-ConfigObjects -Base $base -Overlay $local)
 }

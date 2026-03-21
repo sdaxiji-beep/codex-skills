@@ -1,4 +1,4 @@
-{
+﻿{
   "server": "wechat-devtools-mcp-write",
   "version": "0.1.0",
   "enabled": true,
@@ -39,7 +39,7 @@
       "default_enabled": false,
       "requires_confirmation": true,
       "requires_validation": true,
-      "project_scope": "D:\\卤味",
+      "project_scope": "<configured-project-root>",
       "rollout_order": 1,
       "release_gate": {
         "tool_flag": "WECHAT_WRITE_TOOL_PREVIEW_ENABLE",
@@ -55,7 +55,7 @@
       "default_enabled": false,
       "requires_confirmation": true,
       "requires_validation": true,
-      "project_scope": "D:\\卤味",
+      "project_scope": "<configured-project-root>",
       "rollout_order": 2
     },
     {
@@ -65,7 +65,7 @@
       "default_enabled": false,
       "requires_confirmation": true,
       "requires_validation": true,
-      "project_scope": "D:\\卤味",
+      "project_scope": "<configured-project-root>",
       "rollout_order": 3
     },
     {
@@ -75,7 +75,7 @@
       "default_enabled": false,
       "requires_confirmation": true,
       "requires_validation": true,
-      "project_scope": "G:\\codex专属\\sandbox;G:\\codex测试;D:\\卤味 (future guarded only)",
+      "project_scope": "<repo-root>\\sandbox;<lab-workspace-root>;<configured-project-root> (future guarded only)",
       "rollout_order": 4
     }
   ],
@@ -90,3 +90,4 @@
     "preview_project may return confirmation_required but must not execute deploy directly."
   ]
 }
+

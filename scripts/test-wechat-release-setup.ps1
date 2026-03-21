@@ -22,8 +22,24 @@ $baseConfigPath = Join-Path $tempRoot 'deploy-config.json'
 $keyPath = Join-Path $keysDir 'private.test.key'
 Set-Content $keyPath 'fake-key' -Encoding UTF8
 
+$missingBasePath = Join-Path $tempRoot 'missing-deploy-config.json'
+$beforeMissingBase = Get-WechatReleaseReadiness -ConfigPath $missingBasePath -WorkspaceRoot $tempRoot
+Assert-Equal $beforeMissingBase.ready $false "release readiness should stay false when base config is missing"
+Assert-Equal $beforeMissingBase.status 'needs_release_setup' "missing base config should map to needs_release_setup"
+
 $before = Get-WechatReleaseReadiness -ConfigPath $baseConfigPath -WorkspaceRoot $tempRoot
 Assert-Equal $before.ready $false "release readiness should fail before local setup"
+
+$setupWithoutBase = Invoke-WechatReleaseSetup `
+  -WorkspaceRoot $tempRoot `
+  -ConfigPath $missingBasePath `
+  -AppId 'wx1234567890abcdef' `
+  -PrivateKeyPath $keyPath `
+  -ProjectPath $miniDir `
+  -ProjectRoot $tempRoot `
+  -NonInteractive
+
+Assert-Equal $setupWithoutBase.status 'success' "release setup should succeed without a base deploy config"
 
 $setup = Invoke-WechatReleaseSetup `
   -WorkspaceRoot $tempRoot `

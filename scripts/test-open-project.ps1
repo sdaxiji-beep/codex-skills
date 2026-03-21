@@ -1,9 +1,9 @@
-param([hashtable]$FlowResult, [hashtable]$Context)
+﻿param([hashtable]$FlowResult, [hashtable]$Context)
 
 . "$PSScriptRoot\test-common.ps1"
 . "$PSScriptRoot\wechat-open-project.ps1"
 
-$r = Invoke-OpenProject -ProjectPath 'G:\does-not-exist'
+$r = Invoke-OpenProject -ProjectPath (Join-Path ([System.IO.Path]::GetTempPath()) 'codex-skills-missing-project')
 Assert-Equal $r.status 'failed' 'missing path should return failed'
 
 $root = Split-Path $PSScriptRoot -Parent
