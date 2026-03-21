@@ -1,6 +1,12 @@
 ---
 name: wechat-devtools-control
-description: Use this skill for end-to-end WeChat DevTools workflow control in this repo, including bootstrap, environment doctor checks, natural-language project creation, generated project preview/guard/upload dry-run, validation gates (fast/full), and guarded deploy orchestration when no narrower WeChat skill applies.
+description: >
+  Use this skill for any WeChat Mini Program task in this
+  repo when no narrower skill applies. Trigger on: bootstrap,
+  doctor check, create project from prompt, preview generated
+  project, run validation gates, guarded deploy orchestration.
+  Narrower skills take priority: wechat-spec-executor,
+  wechat-release-guard, wechat-lab-builder.
 ---
 
 # WeChat DevTools Control
@@ -8,6 +14,7 @@ description: Use this skill for end-to-end WeChat DevTools workflow control in t
 Use this fallback umbrella skill for the local WeChat workflow when a narrower WeChat skill is not explicitly selected.
 
 ## Entry
+# Must run from repo root. Example: cd G:\codex_skills
 
 ```powershell
 $RepoRoot = (Get-Location).Path
@@ -52,4 +59,3 @@ powershell -ExecutionPolicy Bypass -File (Join-Path $RepoRoot "scripts\test-wech
 - `wechat-spec-executor`
 - `wechat-release-guard`
 - `wechat-lab-builder`
-
