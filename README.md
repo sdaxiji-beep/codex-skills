@@ -98,8 +98,17 @@ The commands remain available for debugging, documentation, or manual operation.
 ## Validate Skills
 
 ```powershell
+# Default path (works if Codex installed to default location)
+$Validator = Join-Path $env:USERPROFILE ".codex\skills\.system\skill-creator\scripts\quick_validate.py"
+
+# If the default path does not exist, set it manually before running
+if (-not (Test-Path $Validator)) {
+  Write-Error "skill-creator not found at: $Validator"
+  Write-Error "Set `$Validator to your local quick_validate.py path and re-run."
+  return
+}
+
 $RepoRoot = (Get-Location).Path
-$Validator = "<path-to-your-Codex-skill-creator>\\scripts\\quick_validate.py"
 
 python $Validator (Join-Path $RepoRoot ".agents\skills\wechat-devtools-control")
 python $Validator (Join-Path $RepoRoot ".agents\skills\wechat-release-guard")
