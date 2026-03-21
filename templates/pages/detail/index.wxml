@@ -1,7 +1,0 @@
-<view class="container">
-  <input class="title-input" placeholder="标题"
-    value="{{title}}" bindinput="onTitleInput" />
-  <textarea class="content-input" placeholder="写点什么..."
-    value="{{content}}" bindinput="onContentInput" />
-  <button bindtap="saveNote" class="save-btn">保存</button>
-</view>

@@ -13,11 +13,12 @@ Assert-True (Test-Path $policyPath) "policy.json should exist"
 $nodeCode = @"
 import fs from 'node:fs';
 import { evaluatePreviewProjectContract } from '$($serverPath.Replace('\','/'))';
-const policy = JSON.parse(fs.readFileSync('$($policyPath.Replace('\','/'))', 'utf8'));
+const policyRaw = fs.readFileSync('$($policyPath.Replace('\','/'))', 'utf8').replace(/^\uFEFF/, '');
+const policy = JSON.parse(policyRaw);
 const payload = {
   request_id: 'req-1',
   action: 'preview_project',
-  scope: 'D:\\\\卤味',
+  scope: 'sandbox\\\\fake-project',
   summary: 'Generate preview QR for current project state',
   risk_level: 'low',
   requires_explicit_yes: true,
@@ -34,6 +35,7 @@ console.log(JSON.stringify({ accepted }));
 "@
 
 $raw = & node $entry -e $nodeCode 2>&1 | Out-String
+$raw = $raw.TrimStart([char]0xFEFF).Trim()
 try {
     $json = $raw | ConvertFrom-Json
 }
@@ -47,7 +49,8 @@ Assert-Equal $json.accepted.execution_requested $true 'executeRequested should b
 $toolNodeCode = @"
 import { evaluatePreviewProjectContract } from '$($serverPath.Replace('\','/'))';
 import fs from 'node:fs';
-const policy = JSON.parse(fs.readFileSync('$($policyPath.Replace('\','/'))', 'utf8'));
+const policyRaw = fs.readFileSync('$($policyPath.Replace('\','/'))', 'utf8').replace(/^\uFEFF/, '');
+const policy = JSON.parse(policyRaw);
 const confirmed = evaluatePreviewProjectContract({
   desc: 'execution gate',
   toolFlagValue: '1',
@@ -55,7 +58,7 @@ const confirmed = evaluatePreviewProjectContract({
   confirmationPayload: {
     request_id: 'req-1',
     action: 'preview_project',
-    scope: 'D:\\\\卤味',
+    scope: 'sandbox\\\\fake-project',
     summary: 'Generate preview QR for current project state',
     risk_level: 'low',
     requires_explicit_yes: true,
@@ -66,7 +69,9 @@ const confirmed = evaluatePreviewProjectContract({
 console.log(JSON.stringify(confirmed));
 "@
 
-$base = & node $entry -e $toolNodeCode 2>&1 | Out-String | ConvertFrom-Json
+$baseRaw = & node $entry -e $toolNodeCode 2>&1 | Out-String
+$baseRaw = $baseRaw.TrimStart([char]0xFEFF).Trim()
+$base = $baseRaw | ConvertFrom-Json
 Assert-Equal $base.status 'confirmation_accepted' 'direct contract remains accepted before runtime execution gate'
 
 New-TestResult -Name 'mcp-write-preview-execution-gate' -Data @{

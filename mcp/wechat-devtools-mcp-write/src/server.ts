@@ -225,7 +225,7 @@ export function evaluatePreviewProjectContract(input: {
     confirmation_request_example: {
       request_id: "preview-<timestamp>",
       action: "preview_project",
-      scope: "D:\\卤味",
+      scope: "<repo-root>/sandbox/fake-project",
       summary: desc || "Generate preview QR for current project state",
       risk_level: "low",
       requires_explicit_yes: true,

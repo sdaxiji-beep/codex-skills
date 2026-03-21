@@ -11,7 +11,7 @@ function Get-BuildTemplateMap {
         }
     }
 
-    return (Get-Content $mapPath -Raw | ConvertFrom-Json)
+    return (Get-Content $mapPath -Raw -Encoding UTF8 | ConvertFrom-Json)
 }
 
 function Resolve-BuildTemplateFromPrompt {

@@ -37,6 +37,8 @@ This repo is a standalone workspace copied from the original workspace and packa
 - runtime cache
 - local audit output
 
+`generated/` and `artifacts/` are runtime-only folders. They are ignored by Git and should not be published as release content.
+
 ## Quick Start
 
 ```powershell
@@ -111,3 +113,14 @@ python $Validator (Join-Path $RepoRoot ".agents\skills\wechat-lab-builder")
 - `touristappid` projects stay blocked from upload and deploy.
 - Real upload is only for explicit real-appid cases after guard checks.
 - If real deploy config is missing, use `Invoke-WechatReleaseSetup` to collect local appid and private key settings on the user's machine.
+
+## Runtime Hygiene
+
+Use the cleanup helper before packaging or sharing screenshots/logs:
+
+```powershell
+$RepoRoot = (Get-Location).Path
+powershell -ExecutionPolicy Bypass -File (Join-Path $RepoRoot "scripts\cleanup-runtime-data.ps1")
+# Apply cleanup
+powershell -ExecutionPolicy Bypass -File (Join-Path $RepoRoot "scripts\cleanup-runtime-data.ps1") -Apply
+```

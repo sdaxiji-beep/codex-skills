@@ -20,6 +20,8 @@ Use this checklist before sharing the project with other users.
 - `keys/` and any private credential files
 - temporary restore folders (for example `restored-*`)
 
+`generated/` and `artifacts/` are runtime-only and should be cleaned before release snapshots.
+
 ## Release policy
 
 - Default generated projects to preview-only.
@@ -42,4 +44,12 @@ Invoke-WechatCreate -Prompt "build a notebook mini program" -Open $true -Preview
 $RepoRoot = (Get-Location).Path
 powershell -ExecutionPolicy Bypass -File (Join-Path $RepoRoot "scripts\\test-wechat-skill.ps1") -GuardCheckOnly
 powershell -ExecutionPolicy Bypass -File (Join-Path $RepoRoot "scripts\\test-wechat-skill.ps1") -SkipSmoke -Tag fast
+```
+
+## Runtime cleanup before sharing
+
+```powershell
+$RepoRoot = (Get-Location).Path
+powershell -ExecutionPolicy Bypass -File (Join-Path $RepoRoot "scripts\\cleanup-runtime-data.ps1")
+powershell -ExecutionPolicy Bypass -File (Join-Path $RepoRoot "scripts\\cleanup-runtime-data.ps1") -Apply
 ```

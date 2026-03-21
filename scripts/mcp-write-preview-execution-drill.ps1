@@ -16,11 +16,12 @@ if (-not (Test-Path $policyPath)) { throw "policy not found: $policyPath" }
 $nodeCode = @"
 import fs from 'node:fs';
 import { resolvePreviewProjectRequest } from '$($script.Replace('\','/'))';
-const policy = JSON.parse(fs.readFileSync('$($policyPath.Replace('\','/'))','utf8'));
+const policyRaw = fs.readFileSync('$($policyPath.Replace('\','/'))','utf8').replace(/^\uFEFF/, '');
+const policy = JSON.parse(policyRaw);
 const payload = {
   request_id: 'preview-drill-1',
   action: 'preview_project',
-  scope: 'D:\\\\卤味',
+  scope: 'sandbox\\\\fake-project',
   summary: process.env.WECHAT_PREVIEW_EXEC_DRILL_DESC || 'phase3 preview execution drill',
   risk_level: 'low',
   requires_explicit_yes: true,
@@ -47,6 +48,7 @@ console.log(JSON.stringify({ blocked, permitted }));
 
 $env:WECHAT_PREVIEW_EXEC_DRILL_DESC = $Desc
 $raw = & node $entry -e $nodeCode 2>&1 | Out-String
+$raw = $raw.TrimStart([char]0xFEFF).Trim()
 Remove-Item Env:WECHAT_PREVIEW_EXEC_DRILL_DESC -ErrorAction SilentlyContinue
 
 try {
