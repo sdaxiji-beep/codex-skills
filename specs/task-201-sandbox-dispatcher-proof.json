@@ -23,7 +23,7 @@
     "acceptance": [
       "dispatcher-proof.txt is written under .\\sandbox\\fake-project",
       "validation command exits with code 0",
-      "no write occurs under D:\\luwei"
+      "no write occurs outside the sandbox workspace"
     ],
     "constraints": [
       "sandbox only",

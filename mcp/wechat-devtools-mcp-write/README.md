@@ -56,28 +56,28 @@ Without this gate, the tool returns `blocked_by_tool_flag` and does not execute 
 Use the readonly gate probe script to see exactly which gate is currently blocking startup/tool execution:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File G:\codex专属\scripts\mcp-write-gate-status.ps1 -AsJson
+powershell -ExecutionPolicy Bypass -File .\scripts\mcp-write-gate-status.ps1 -AsJson
 ```
 
 For a 4-case dry-run matrix (none/service_only/tool_only/both_envs):
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File G:\codex专属\scripts\mcp-write-gate-dryrun.ps1 -AsJson
+powershell -ExecutionPolicy Bypass -File .\scripts\mcp-write-gate-dryrun.ps1 -AsJson
 ```
 
 Latest matrix artifact:
 
-- `G:\codex专属\artifacts\mcp-write-gate-dryrun-latest.json`
+- `<repo-root>\artifacts\mcp-write-gate-dryrun-latest.json`
 
 Readiness summary (single command):
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File G:\codex专属\scripts\mcp-write-readiness.ps1 -AsJson
+powershell -ExecutionPolicy Bypass -File .\scripts\mcp-write-readiness.ps1 -AsJson
 ```
 
 Latest readiness artifact:
 
-- `G:\codex专属\artifacts\mcp-write-readiness-latest.json`
+- `<repo-root>\artifacts\mcp-write-readiness-latest.json`
 
 ## Intent
 

@@ -6,7 +6,9 @@ description: >
   doctor check, create project from prompt, preview generated
   project, run validation gates, guarded deploy orchestration.
   Narrower skills take priority: wechat-spec-executor,
-  wechat-release-guard, wechat-lab-builder.
+  wechat-release-guard, wechat-lab-builder,
+  wechat-page-generator, wechat-component-generator,
+  wechat-global-config-modifier.
 ---
 
 # WeChat DevTools Control
@@ -14,7 +16,7 @@ description: >
 Use this fallback umbrella skill for the local WeChat workflow when a narrower WeChat skill is not explicitly selected.
 
 ## Entry
-# Must run from repo root. Example: cd G:\codex_skills
+# Must run from repo root. Example: cd <your-cloned-repo-path>
 
 ```powershell
 $RepoRoot = (Get-Location).Path
@@ -59,3 +61,6 @@ powershell -ExecutionPolicy Bypass -File (Join-Path $RepoRoot "scripts\test-wech
 - `wechat-spec-executor`
 - `wechat-release-guard`
 - `wechat-lab-builder`
+- `wechat-page-generator`
+- `wechat-component-generator`
+- `wechat-global-config-modifier`

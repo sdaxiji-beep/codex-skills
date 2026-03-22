@@ -11,6 +11,9 @@ param()
 . "$PSScriptRoot\wechat-task-dispatch.ps1"
 . "$PSScriptRoot\wechat-generated-project.ps1"
 . "$PSScriptRoot\wechat-create.ps1"
+. "$PSScriptRoot\wechat-generate-page.ps1"
+. "$PSScriptRoot\wechat-generate-component.ps1"
+. "$PSScriptRoot\wechat-patch-app-json.ps1"
 . "$PSScriptRoot\wechat-doctor.ps1"
 . "$PSScriptRoot\wechat-bootstrap.ps1"
 . "$PSScriptRoot\wechat-release-setup.ps1"
@@ -72,6 +75,9 @@ function Get-WechatHelp {
 
 [Project]
   Invoke-WechatCreate
+  Invoke-WechatGeneratePage
+  Invoke-WechatGenerateComponent
+  Invoke-WechatPatchAppJson
   Invoke-OpenProject
   Get-GeneratedProjectList
   Invoke-GeneratedProjectOpen
