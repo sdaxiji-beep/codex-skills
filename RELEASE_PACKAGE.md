@@ -35,7 +35,7 @@ $RepoRoot = (Get-Location).Path
 . (Join-Path $RepoRoot "scripts\\wechat.ps1")
 Invoke-WechatBootstrap
 Invoke-WechatDoctor
-Invoke-WechatCreate -Prompt "build a notebook mini program" -Open $true -Preview $true
+Invoke-WechatCreate -Prompt "build a notebook mini program" -Open $false -Preview $false
 ```
 
 ## Validation gate before release
