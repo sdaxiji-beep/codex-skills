@@ -26,7 +26,8 @@ npm run start
 1. Server type check
 
 ```powershell
-node -e "const fs=require('fs');const p='G:/codex专属/.agent/mcps.json';const j=JSON.parse(fs.readFileSync(p,'utf8'));console.log(Object.keys(j.mcpServers||{}))"
+$RepoRoot = (Get-Location).Path
+node -e "const fs=require('fs');const p=require('path').join(process.argv[1],'.agent','mcps.json');const j=JSON.parse(fs.readFileSync(p,'utf8'));console.log(Object.keys(j.mcpServers||{}))" $RepoRoot
 ```
 
 2. Readonly check (status + history + trend)
