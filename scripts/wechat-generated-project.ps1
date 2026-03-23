@@ -10,6 +10,16 @@ function Get-GeneratedProjectRoot {
     return (Join-Path (Split-Path $PSScriptRoot -Parent) 'generated')
 }
 
+function Write-Utf8NoBomFile {
+    param(
+        [Parameter(Mandatory)][string]$Path,
+        [Parameter(Mandatory)][string]$Content
+    )
+
+    $encoding = New-Object System.Text.UTF8Encoding($false)
+    [System.IO.File]::WriteAllText($Path, $Content, $encoding)
+}
+
 function Get-GeneratedProjectList {
     param(
         [string]$Root = ''
@@ -27,8 +37,8 @@ function Get-GeneratedProjectList {
         Sort-Object LastWriteTime -Descending |
         ForEach-Object {
             [pscustomobject]@{
-                name           = $_.Name
-                project_dir    = $_.FullName
+                name            = $_.Name
+                project_dir     = $_.FullName
                 last_write_time = $_.LastWriteTime
             }
         })
@@ -76,10 +86,10 @@ function Get-GeneratedProjectMetadata {
     $spec = $null
 
     if (Test-Path $configPath) {
-        $config = Get-Content $configPath -Raw | ConvertFrom-Json
+        $config = Get-Content $configPath -Raw -Encoding UTF8 | ConvertFrom-Json
     }
     if (Test-Path $specPath) {
-        $spec = Get-Content $specPath -Raw | ConvertFrom-Json
+        $spec = Get-Content $specPath -Raw -Encoding UTF8 | ConvertFrom-Json
     }
 
     return [pscustomobject]@{
@@ -90,6 +100,32 @@ function Get-GeneratedProjectMetadata {
         prompt      = if ($spec -and $spec.task) { [string]$spec.task.title } else { '' }
         config_path = $configPath
     }
+}
+
+function Test-WechatGeneratedProjectCliFailure {
+    param(
+        [string]$RawOutput,
+        $ParsedOutput
+    )
+
+    $rawText = [string]$RawOutput
+    if (-not [string]::IsNullOrWhiteSpace($rawText)) {
+        if ($rawText -match '\[error\]') { return $true }
+        if ($rawText -match 'invalid appid') { return $true }
+        if ($rawText -match 'preview_failed') { return $true }
+        if ($rawText -match 'upload_failed') { return $true }
+    }
+
+    if ($null -ne $ParsedOutput) {
+        $parsedText = ($ParsedOutput | ConvertTo-Json -Depth 10 -Compress)
+        if ($parsedText -match '"error"\s*:') { return $true }
+        if ($parsedText -match '"errors"\s*:') { return $true }
+        if ($parsedText -match 'invalid appid') { return $true }
+        if ($parsedText -match 'preview_failed') { return $true }
+        if ($parsedText -match 'upload_failed') { return $true }
+    }
+
+    return $false
 }
 
 function Invoke-GeneratedProjectSetAppId {
@@ -120,13 +156,13 @@ function Invoke-GeneratedProjectSetAppId {
         }
     }
 
-    $config = Get-Content $configPath -Raw | ConvertFrom-Json
+    $config = Get-Content $configPath -Raw -Encoding UTF8 | ConvertFrom-Json
     $config.appid = $AppId
     if (-not [string]::IsNullOrWhiteSpace($ProjectName)) {
         $config.projectname = $ProjectName
     }
 
-    $config | ConvertTo-Json -Depth 10 | Set-Content $configPath -Encoding UTF8
+    Write-Utf8NoBomFile -Path $configPath -Content ($config | ConvertTo-Json -Depth 10)
     $updated = Get-GeneratedProjectMetadata -ProjectPath $resolvedProject
 
     return @{
@@ -173,8 +209,10 @@ function Invoke-GeneratedProjectPreview {
         '--port', [string]$port
     )
 
+    $previewFailed = (-not $result.success) -or (Test-WechatGeneratedProjectCliFailure -RawOutput $result.raw -ParsedOutput $result.parsed)
+
     return @{
-        status      = if ($result.success) { 'success' } else { 'failed' }
+        status      = if ($previewFailed) { 'failed' } else { 'success' }
         project_dir = $resolvedProject
         appid       = $metadata.appid
         template    = $metadata.template
@@ -280,8 +318,10 @@ function Invoke-GeneratedProjectUpload {
         '--robot', '1'
     )
 
+    $uploadFailed = (-not $result.success) -or (Test-WechatGeneratedProjectCliFailure -RawOutput $result.raw -ParsedOutput $result.parsed)
+
     return @{
-        status      = if ($result.success) { 'success' } else { 'failed' }
+        status      = if ($uploadFailed) { 'failed' } else { 'success' }
         project_dir = $resolvedProject
         appid       = $metadata.appid
         template    = $metadata.template

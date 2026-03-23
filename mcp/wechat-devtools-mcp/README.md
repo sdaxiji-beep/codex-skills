@@ -1,6 +1,6 @@
 # wechat-devtools-mcp (readonly v1)
 
-Readonly MCP server for the `G:\codex专属` WeChat automation workspace.
+Readonly MCP server for the local WeChat automation workspace at `<repo-root>`.
 
 ## Tools
 
@@ -15,7 +15,7 @@ All tools are readonly in v1. Write and deploy tools are intentionally excluded.
 ## Run
 
 ```powershell
-cd G:\codex专属\mcp\wechat-devtools-mcp
+cd <repo-root>\mcp\wechat-devtools-mcp
 npm run start
 ```
 
@@ -23,6 +23,6 @@ npm run start
 
 The local registration lives in:
 
-- `G:\codex专属\.agent\mcps.json`
+- `<repo-root>\.agent\mcps.json`
 
 This readonly server is the only MCP server currently wired into the local MCP config for the WeChat workflow.
