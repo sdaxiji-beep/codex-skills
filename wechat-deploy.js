@@ -344,7 +344,13 @@ async function verifyDeployment(config, funcName, port) {
 async function main() {
   const args = process.argv.slice(2);
   const mode = (args[0] || 'preview').toLowerCase();
-  const configPath = args[1] || path.join(__dirname, 'deploy-config.json');
+  const configCandidates = [];
+  if (process.env.WECHAT_DEPLOY_CONFIG_PATH) {
+    configCandidates.push(process.env.WECHAT_DEPLOY_CONFIG_PATH);
+  }
+  configCandidates.push(path.join(__dirname, 'config', 'local-release.config.json'));
+  configCandidates.push(path.join(__dirname, 'deploy-config.json'));
+  const configPath = args[1] || configCandidates.find((p) => fs.existsSync(p)) || configCandidates[0];
   const functionName = args[2] || null;
   const config = readJson(configPath);
   const projectRoot = config.projectRoot || path.resolve(config.projectPath, '..');

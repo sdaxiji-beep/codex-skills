@@ -61,22 +61,28 @@ Assert-Equal $validationRoute.intent 'validation' 'validation text should resolv
 $diagnosticRoute = Invoke-WechatTask -TaskText 'run a read-only cloud function diagnostic' -ResolveOnly
 Assert-Equal $diagnosticRoute.mode 'list-functions' 'diagnostic text should resolve to list-functions mode'
 
-$writeRoute = Invoke-WechatTask -TaskText 'add log to order function' -ResolveOnly
-Assert-Equal $writeRoute.intent 'unknown' 'public dispatcher should not route business-specific write intents'
+$writeRoute = Invoke-WechatTask -TaskText 'add log to getOrder' -ResolveOnly
+Assert-Equal $writeRoute.intent 'spec' 'write text should resolve to a spec route'
+Assert-Equal $writeRoute.mode 'real-write' 'write text should resolve to real-write mode'
+Assert-Equal $writeRoute.requires_confirmation $true 'write route should require confirmation'
+Assert-Equal $writeRoute.safe $false 'write route should not be marked safe'
 
-$writeBlocked = Invoke-WechatTask -TaskText 'add log to order function'
-Assert-Equal $writeBlocked.status 'unroutable' 'business-specific write intents should stay unroutable in the public repo'
+$writeBlocked = Invoke-WechatTask -TaskText 'add log to getOrder'
+Assert-Equal $writeBlocked.status 'confirmation_required' 'unsafe write route should be blocked without explicit allow'
 
 $suggestions = @(Invoke-WechatTask -TaskText 'add log to order function' -SuggestOnly)
-Assert-True ($suggestions.Count -eq 0) 'public dispatcher should not suggest private business write routes'
+Assert-True ($suggestions.Count -ge 1) 'dispatcher should return at least one candidate suggestion'
+Assert-Equal $suggestions[0].label 'write-log-getorder' 'getOrder should be the highest ranked write suggestion for order log requests'
 
 $recommended = Invoke-WechatTask -TaskText 'add log to order function' -RecommendOnly
-Assert-True ($null -eq $recommended) 'public dispatcher should not recommend private business write routes'
+Assert-NotEmpty $recommended 'dispatcher should produce a recommended task for ambiguous supported text'
+Assert-Equal $recommended.label 'write-log-getorder' 'recommended task should prefer getOrder for order log requests'
 
 $handoff = Invoke-WechatTask -TaskText 'add log to order function' -HandoffOnly
-Assert-NotEmpty $handoff 'handoff object should still be produced'
-Assert-Equal $handoff.guard_status 'no_match' 'public dispatcher should report no_match for private business write intents'
-Assert-True (-not $handoff.requires_approval) 'no approval should be requested when no route matches'
+Assert-NotEmpty $handoff 'handoff object should be produced for supported ambiguous text'
+Assert-Equal $handoff.guard_status 'confirmation_required' 'write handoff should stay confirmation-gated'
+Assert-Equal $handoff.recommended.label 'write-log-getorder' 'handoff should carry the same recommended task'
+Assert-True ($handoff.requires_approval) 'write handoff should explicitly require approval'
 
 $unknownRoute = Invoke-WechatTask -TaskText 'do something completely unrelated' -ResolveOnly
 Assert-Equal $unknownRoute.intent 'unknown' 'unknown text should stay unresolved'

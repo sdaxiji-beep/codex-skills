@@ -1,4 +1,4 @@
-﻿[CmdletBinding()]
+[CmdletBinding()]
 param(
     [ValidateSet('ok', 'skipped', 'failed')]
     [string]$Variant = 'ok',
@@ -15,11 +15,32 @@ function Get-WechatCliPath {
         return $candidate
     }
 
-    return 'C:\Program Files (x86)\Tencent\寰俊web寮€鍙戣€呭伐鍏穃cli.bat'
+    return 'C:\Program Files (x86)\Tencent\微信web开发者工具\cli.bat'
 }
 
 function Get-WorkspaceRoot {
     return (Split-Path $PSScriptRoot -Parent)
+}
+
+function Get-ReadonlyDefaultProjectPath {
+    if (-not [string]::IsNullOrWhiteSpace($env:WECHAT_DEFAULT_PROJECT_PATH)) {
+        return $env:WECHAT_DEFAULT_PROJECT_PATH
+    }
+
+    $workspaceRoot = Get-WorkspaceRoot
+    $localConfigPath = Join-Path $workspaceRoot 'config\\local-release.config.json'
+    if (Test-Path $localConfigPath) {
+        try {
+            $config = Get-Content -Path $localConfigPath -Raw -Encoding UTF8 | ConvertFrom-Json -ErrorAction Stop
+            if (-not [string]::IsNullOrWhiteSpace([string]$config.projectRoot)) {
+                return [string]$config.projectRoot
+            }
+        }
+        catch {
+        }
+    }
+
+    return (Join-Path $workspaceRoot 'sandbox')
 }
 
 function Test-AutomatorPort {
@@ -75,9 +96,13 @@ function Invoke-ExternalCommand {
 
 function Ensure-AutomatorPort {
     param(
-        [string]$ProjectPath = (Join-Path (Get-WorkspaceRoot) 'sandbox\fake-project'),
+        [string]$ProjectPath = '',
         [int]$AutoPort = 9420
     )
+
+    if ([string]::IsNullOrWhiteSpace($ProjectPath)) {
+        $ProjectPath = Get-ReadonlyDefaultProjectPath
+    }
 
     if (Test-AutomatorPort -Port $AutoPort) {
         Write-Verbose "[AUTOMATOR] Port $AutoPort already available."
@@ -114,9 +139,13 @@ function Ensure-AutomatorPort {
 
 function Get-AutomatorPageInfo {
     param(
-        [string]$ProjectPath = (Join-Path (Get-WorkspaceRoot) 'sandbox\fake-project'),
+        [string]$ProjectPath = '',
         [int]$AutoPort = 9420
     )
+
+    if ([string]::IsNullOrWhiteSpace($ProjectPath)) {
+        $ProjectPath = Get-ReadonlyDefaultProjectPath
+    }
 
     $cliPath = Get-WechatCliPath
     if (-not (Test-Path $cliPath)) {
@@ -436,10 +465,14 @@ function New-FlowResult {
 function Invoke-FlowViaAutomator {
     [CmdletBinding()]
     param(
-        [string]$ProjectPath = (Join-Path (Get-WorkspaceRoot) 'sandbox\fake-project'),
+        [string]$ProjectPath = '',
         [ValidateSet('ok', 'skipped', 'failed')]
         [string]$Variant = 'ok'
     )
+
+    if ([string]::IsNullOrWhiteSpace($ProjectPath)) {
+        $ProjectPath = Get-ReadonlyDefaultProjectPath
+    }
 
     try {
         $servicePort = Get-WechatDevtoolsPort
@@ -488,4 +521,3 @@ if ($MyInvocation.InvocationName -ne '.') {
         $result
     }
 }
-

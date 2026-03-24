@@ -72,6 +72,26 @@ function Resolve-WechatTaskIntent {
         return [pscustomobject]$route
     }
 
+    if ($normalized -match 'timercancelorder|timer cancel order|cancel order log|timer log') {
+        $route.intent = 'spec'
+        $route.mode = 'real-write'
+        $route.spec_path = Join-Path $repoRoot 'specs\task-add-log-to-timer.json'
+        $route.safe = $false
+        $route.requires_confirmation = $true
+        $route.reason = 'matched_timer_cancel_order_write_keywords'
+        return [pscustomobject]$route
+    }
+
+    if ($normalized -match '\bgetorder\b|get order|order query log|add log to getorder') {
+        $route.intent = 'spec'
+        $route.mode = 'real-write'
+        $route.spec_path = Join-Path $repoRoot 'specs\task-005-add-log-getOrder-v2.json'
+        $route.safe = $false
+        $route.requires_confirmation = $true
+        $route.reason = 'matched_get_order_write_keywords'
+        return [pscustomobject]$route
+    }
+
     if ($normalized -match 'list-functions|cloud functions|function inventory|diagnostic|read-only') {
         $route.intent = 'spec'
         $route.mode = 'list-functions'
@@ -212,6 +232,32 @@ function Get-WechatTaskCandidates {
             safe                  = $true
             requires_confirmation = $false
             rank                  = 1
+        }
+    }
+
+    if ($normalized -match '\bgetorder\b|get order|order query log|add log') {
+        $candidates += [pscustomobject]@{
+            label                 = 'write-log-getorder'
+            summary               = 'Add entry and exit logs to getOrder'
+            intent                = 'spec'
+            mode                  = 'real-write'
+            spec_path             = Join-Path $repoRoot 'specs\task-005-add-log-getOrder-v2.json'
+            safe                  = $false
+            requires_confirmation = $true
+            rank                  = 2
+        }
+    }
+
+    if ($normalized -match 'timercancelorder|timer cancel order|cancel order log|timer log|add log') {
+        $candidates += [pscustomobject]@{
+            label                 = 'write-log-timercancelorder'
+            summary               = 'Add entry and exit logs to timerCancelOrder'
+            intent                = 'spec'
+            mode                  = 'real-write'
+            spec_path             = Join-Path $repoRoot 'specs\task-add-log-to-timer.json'
+            safe                  = $false
+            requires_confirmation = $true
+            rank                  = 3
         }
     }
 

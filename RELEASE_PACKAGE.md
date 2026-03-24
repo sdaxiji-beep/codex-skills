@@ -6,10 +6,13 @@ Use this checklist before sharing the project with other users.
 
 - `scripts/`
 - `templates/`
-- `specs/` (only public/sample specs)
 - `.agents/skills/wechat-devtools-control/SKILL.md`
 - `README.md`
 - `RELEASE_PACKAGE.md`
+- `EXTERNAL_CLIENT_ENTRYPOINTS.md`
+- `MCP_BOUNDARY_CONTRACT.md`
+- `release-package.manifest.json`
+- `config/local-release.config.example.json`
 - `package.json`
 
 ## Exclude
@@ -18,15 +21,17 @@ Use this checklist before sharing the project with other users.
 - `generated/` user-generated projects
 - `node_modules/`
 - `keys/` and any private credential files
+- `config/local-release.config.json`
+- root `deploy-config.json`
 - temporary restore folders (for example `restored-*`)
-
-`generated/` and `artifacts/` are runtime-only and should be cleaned before release snapshots.
 
 ## Release policy
 
 - Default generated projects to preview-only.
 - Keep `touristappid` projects blocked from upload/deploy.
 - Only allow guarded upload after a user sets a real appid intentionally.
+- Real release actions should use a local private config file at `config/local-release.config.json`.
+- Public sharing should include only `config/local-release.config.example.json`, never the private local config.
 
 ## First-run steps for other users
 
@@ -44,12 +49,5 @@ Invoke-WechatCreate -Prompt "build a notebook mini program" -Open $false -Previe
 $RepoRoot = (Get-Location).Path
 powershell -ExecutionPolicy Bypass -File (Join-Path $RepoRoot "scripts\\test-wechat-skill.ps1") -GuardCheckOnly
 powershell -ExecutionPolicy Bypass -File (Join-Path $RepoRoot "scripts\\test-wechat-skill.ps1") -SkipSmoke -Tag fast
-```
-
-## Runtime cleanup before sharing
-
-```powershell
-$RepoRoot = (Get-Location).Path
-powershell -ExecutionPolicy Bypass -File (Join-Path $RepoRoot "scripts\\cleanup-runtime-data.ps1")
-powershell -ExecutionPolicy Bypass -File (Join-Path $RepoRoot "scripts\\cleanup-runtime-data.ps1") -Apply
+powershell -ExecutionPolicy Bypass -File (Join-Path $RepoRoot "scripts\\check-release-package.ps1")
 ```

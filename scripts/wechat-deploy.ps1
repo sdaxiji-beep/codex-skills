@@ -3,14 +3,40 @@ param()
 
 . "$PSScriptRoot\wechat-write-guard.ps1"
 . "$PSScriptRoot\wechat-get-port.ps1"
-. "$PSScriptRoot\wechat-release-setup.ps1"
+
+function Get-DefaultDeployConfigPath {
+    $repoRoot = Split-Path $PSScriptRoot -Parent
+    $candidates = @()
+
+    if (-not [string]::IsNullOrWhiteSpace($env:WECHAT_DEPLOY_CONFIG_PATH)) {
+        $candidates += $env:WECHAT_DEPLOY_CONFIG_PATH
+    }
+
+    $candidates += (Join-Path $repoRoot 'config\local-release.config.json')
+    $candidates += (Join-Path $repoRoot 'deploy-config.json')
+
+    foreach ($candidate in $candidates) {
+        if (-not [string]::IsNullOrWhiteSpace($candidate) -and (Test-Path $candidate)) {
+            return [System.IO.Path]::GetFullPath($candidate)
+        }
+    }
+
+    return (Join-Path $repoRoot 'config\local-release.config.json')
+}
 
 function Get-DeployConfig {
     param(
-        [string]$ConfigPath = "$(Join-Path (Split-Path $PSScriptRoot -Parent) 'deploy-config.json')"
+        [string]$ConfigPath = ''
     )
 
-    return Get-EffectiveDeployConfig -ConfigPath $ConfigPath -WorkspaceRoot (Split-Path $PSScriptRoot -Parent)
+    if ([string]::IsNullOrWhiteSpace($ConfigPath)) {
+        $ConfigPath = Get-DefaultDeployConfigPath
+    }
+
+    if (-not (Test-Path $ConfigPath)) {
+        throw "deploy config not found: $ConfigPath"
+    }
+    return Get-Content $ConfigPath -Raw | ConvertFrom-Json
 }
 
 function Get-CloudFunctions {
@@ -58,7 +84,7 @@ function Invoke-WechatCliCommand {
 
 function Get-CloudFunctionList {
     param(
-        [string]$ConfigPath = "$(Join-Path (Split-Path $PSScriptRoot -Parent) 'deploy-config.json')"
+        [string]$ConfigPath = ''
     )
 
     $config = Get-DeployConfig -ConfigPath $ConfigPath
@@ -164,7 +190,7 @@ function Invoke-WechatDeploy {
         [string]$Mode = 'preview',
         [string]$FunctionName,
         [bool]$RequireConfirm = $true,
-        [string]$ConfigPath = "$(Join-Path (Split-Path $PSScriptRoot -Parent) 'deploy-config.json')"
+        [string]$ConfigPath = ''
     )
 
     $config = Get-DeployConfig -ConfigPath $ConfigPath
@@ -247,7 +273,7 @@ function Invoke-DeployCloudFunction {
     param(
         [Parameter(Mandatory)][string]$FuncName,
         [bool]$RequireConfirm = $true,
-        [string]$ConfigPath = "$(Join-Path (Split-Path $PSScriptRoot -Parent) 'deploy-config.json')"
+        [string]$ConfigPath = ''
     )
 
     return Invoke-WechatDeploy -Mode 'deploy-function' -FunctionName $FuncName -RequireConfirm $RequireConfirm -ConfigPath $ConfigPath
@@ -257,7 +283,7 @@ function Invoke-DeployAllCloudFunctions {
     [CmdletBinding()]
     param(
         [bool]$RequireConfirm = $true,
-        [string]$ConfigPath = "$(Join-Path (Split-Path $PSScriptRoot -Parent) 'deploy-config.json')"
+        [string]$ConfigPath = ''
     )
 
     $items = @()
@@ -275,7 +301,7 @@ function Invoke-DeployChangedCloudFunctions {
     [CmdletBinding()]
     param(
         [bool]$RequireConfirm = $true,
-        [string]$ConfigPath = "$(Join-Path (Split-Path $PSScriptRoot -Parent) 'deploy-config.json')"
+        [string]$ConfigPath = ''
     )
 
     $config = Get-DeployConfig -ConfigPath $ConfigPath
@@ -314,7 +340,7 @@ function Invoke-WechatPreview {
     param(
         [string]$Desc = '',
         [bool]$RequireConfirm = $true,
-        [string]$ConfigPath = "$(Join-Path (Split-Path $PSScriptRoot -Parent) 'deploy-config.json')"
+        [string]$ConfigPath = ''
     )
 
     return Invoke-WechatDeploy -Mode 'preview' -RequireConfirm $RequireConfirm -ConfigPath $ConfigPath
@@ -326,19 +352,10 @@ function Invoke-WechatUpload {
         [string]$Version = '1.0.0',
         [string]$Desc = '',
         [bool]$RequireConfirm = $true,
-        [string]$ConfigPath = "$(Join-Path (Split-Path $PSScriptRoot -Parent) 'deploy-config.json')"
+        [string]$ConfigPath = ''
     )
 
-    $requirement = Resolve-WechatReleaseSetupRequirement -ActionName 'upload' -AllowInteractiveSetup $RequireConfirm -ConfigPath $ConfigPath -WorkspaceRoot (Split-Path $PSScriptRoot -Parent)
-    if ($requirement.status -ne 'ready') {
-        return @{
-            status    = 'needs_release_setup'
-            mode      = 'upload'
-            readiness = $requirement.readiness
-        }
-    }
-
-    $config = $requirement.config
+    $config = Get-DeployConfig -ConfigPath $ConfigPath
     $description = "mode=upload version=$Version cloudEnv=$($config.cloudEnv)"
     if ($Desc) { $description += " desc=$Desc" }
     if (-not (Confirm-DeployAction -Description $description -RequireConfirm $RequireConfirm)) {
@@ -369,7 +386,7 @@ function Invoke-PackNpm {
     [CmdletBinding()]
     param(
         [bool]$RequireConfirm = $false,
-        [string]$ConfigPath = "$(Join-Path (Split-Path $PSScriptRoot -Parent) 'deploy-config.json')"
+        [string]$ConfigPath = ''
     )
 
     $config = Get-DeployConfig -ConfigPath $ConfigPath
@@ -397,7 +414,7 @@ function Invoke-PackNpm {
 function Get-CloudEnvList {
     [CmdletBinding()]
     param(
-        [string]$ConfigPath = "$(Join-Path (Split-Path $PSScriptRoot -Parent) 'deploy-config.json')"
+        [string]$ConfigPath = ''
     )
 
     $config = Get-DeployConfig -ConfigPath $ConfigPath

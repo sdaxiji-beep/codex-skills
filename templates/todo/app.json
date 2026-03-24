@@ -3,7 +3,7 @@
   "window": {
     "backgroundTextStyle": "light",
     "navigationBarBackgroundColor": "#ffffff",
-    "navigationBarTitleText": "\u5f85\u529e\u6e05\u5355",
+    "navigationBarTitleText": "Todo List",
     "navigationBarTextStyle": "black"
   },
   "style": "v2",

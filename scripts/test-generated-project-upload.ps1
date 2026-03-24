@@ -31,14 +31,6 @@ Assert-Equal $dryRun.status "dry_run" "eligible generated project should reach u
 Assert-Equal $dryRun.version "1.2.3" "version should be preserved"
 Assert-True ($dryRun.port -gt 0) "dry-run should include a detected port"
 
-$needsSetup = Invoke-GeneratedProjectUpload `
-  -ProjectPath $built.project_dir `
-  -Version "1.2.3" `
-  -Desc "generated real upload" `
-  -RequireConfirm $false `
-  -DryRun $false
-Assert-Equal $needsSetup.status "needs_release_setup" "real upload without local setup should request release setup"
-
 $reverted = Invoke-GeneratedProjectSetAppId `
   -ProjectPath $built.project_dir `
   -AppId "touristappid" `

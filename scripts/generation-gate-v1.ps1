@@ -1,3 +1,5 @@
+. (Join-Path $PSScriptRoot 'generation-gate-ast-policy.ps1')
+
 function Add-GenerationGateV1Error {
     param(
         [Parameter(Mandatory)]$Result,
@@ -13,6 +15,138 @@ function Add-GenerationGateV1Error {
 
     if ($Result.Status -eq 'pass') {
         $Result.Status = 'retryable_fail'
+    }
+}
+
+function Get-GenerationGateV1AstHybridMode {
+    return (Get-WechatAstHybridMode)
+}
+
+function Get-GenerationGateV1AstPromotedSeverities {
+    return (Get-WechatAstPromotedSeverities)
+}
+
+function Invoke-GenerationGateV1AstShadow {
+    param(
+        [Parameter(Mandatory)][string]$JsonPayload
+    )
+
+    $result = [pscustomobject]@{
+        executed = $false
+        available = $false
+        parser = 'none'
+        diagnostics = @()
+        error = $null
+    }
+
+    $validatorScript = Join-Path $PSScriptRoot 'validators\validate-bundle-ast.mjs'
+    if (-not (Test-Path $validatorScript)) {
+        $result.error = "validator_missing:$validatorScript"
+        return $result
+    }
+
+    $nodeCommand = Get-Command node -ErrorAction SilentlyContinue
+    if ($null -eq $nodeCommand) {
+        $result.error = 'node_missing'
+        return $result
+    }
+
+    $tempInputPath = Join-Path ([System.IO.Path]::GetTempPath()) ("gate-v1-ast-" + [guid]::NewGuid().ToString('N') + '.json')
+    try {
+        [System.IO.File]::WriteAllText($tempInputPath, $JsonPayload, (New-Object System.Text.UTF8Encoding($false)))
+        $rawOutput = & $nodeCommand.Source $validatorScript --input $tempInputPath 2>$null
+        if ($LASTEXITCODE -ne 0) {
+            $result.error = "validator_exit_code:$LASTEXITCODE"
+            return $result
+        }
+
+        $parsed = $rawOutput | ConvertFrom-Json -ErrorAction Stop
+        $result.executed = $true
+        $result.available = [bool]$parsed.ok
+        if ($parsed.PSObject.Properties.Name -contains 'parser_name') {
+            $result.parser = [string]$parsed.parser_name
+        }
+        if ($parsed.PSObject.Properties.Name -contains 'diagnostics' -and $null -ne $parsed.diagnostics) {
+            $result.diagnostics = @($parsed.diagnostics)
+        }
+        return $result
+    }
+    catch {
+        $result.error = "validator_exception:$($_.Exception.Message)"
+        return $result
+    }
+    finally {
+        if (Test-Path $tempInputPath) {
+            Remove-Item -Path $tempInputPath -Force -ErrorAction SilentlyContinue
+        }
+    }
+}
+
+function Write-GenerationGateV1AstShadowArtifact {
+    param(
+        [Parameter(Mandatory)]$ShadowResult,
+        [Parameter(Mandatory)]$GateResult
+    )
+
+    try {
+        $repoRoot = Split-Path $PSScriptRoot -Parent
+        $artifactDir = Join-Path $repoRoot 'artifacts\wechat-devtools\generation-gate'
+        New-Item -ItemType Directory -Path $artifactDir -Force | Out-Null
+
+        $errorCount = Get-WechatAstErrorDiagnosticCount -Diagnostics $ShadowResult.diagnostics
+        $gateHasError = @($GateResult.Errors).Count -gt 0
+
+        $hybridMode = Get-GenerationGateV1AstHybridMode
+        $promotedSeverities = Get-GenerationGateV1AstPromotedSeverities
+        $promotedCount = Get-WechatAstPromotedDiagnosticCount -Diagnostics $ShadowResult.diagnostics -PromotedSeverities $promotedSeverities
+
+        $artifact = [pscustomobject]@{
+            generated_at = (Get-Date).ToString('o')
+            gate_status = [string]$GateResult.Status
+            gate_error_count = @($GateResult.Errors).Count
+            hybrid_mode = $hybridMode
+            promoted_severities = @($promotedSeverities)
+            shadow_executed = [bool]$ShadowResult.executed
+            shadow_available = [bool]$ShadowResult.available
+            shadow_parser = [string]$ShadowResult.parser
+            shadow_error_count = $errorCount
+            promoted_error_count = if ($hybridMode) { Get-WechatAstErrorDiagnosticCount -Diagnostics $ShadowResult.diagnostics } else { 0 }
+            promoted_diagnostic_count = if ($hybridMode) { $promotedCount } else { 0 }
+            shadow_error = $ShadowResult.error
+            shadow_mismatch = ($errorCount -gt 0 -and -not $gateHasError)
+            diagnostics = @($ShadowResult.diagnostics)
+        }
+
+        $json = $artifact | ConvertTo-Json -Depth 10
+        $latestPath = Join-Path $artifactDir 'ast-shadow-latest.json'
+        $timestampPath = Join-Path $artifactDir ("ast-shadow-" + (Get-Date -Format 'yyyyMMdd-HHmmss-fff') + '.json')
+        [System.IO.File]::WriteAllText($latestPath, $json, (New-Object System.Text.UTF8Encoding($false)))
+        [System.IO.File]::WriteAllText($timestampPath, $json, (New-Object System.Text.UTF8Encoding($false)))
+    }
+    catch {
+        # Stage 2A shadow mode must never change gate verdict.
+    }
+}
+
+function Apply-GenerationGateV1AstHybridErrors {
+    param(
+        [Parameter(Mandatory)]$ShadowResult,
+        [Parameter(Mandatory)]$GateResult
+    )
+
+    if (-not (Get-GenerationGateV1AstHybridMode)) {
+        return
+    }
+
+    if (-not $ShadowResult.executed -or -not $ShadowResult.available) {
+        return
+    }
+
+    $promotedSeverities = Get-GenerationGateV1AstPromotedSeverities
+    $promotedDiagnostics = @(Get-WechatAstDiagnosticsBySeverity -Diagnostics $ShadowResult.diagnostics -Severities $promotedSeverities)
+
+    foreach ($diag in $promotedDiagnostics) {
+        Add-GenerationGateV1Error -Result $GateResult -Message (New-WechatAstGateMessage -Diagnostic $diag)
     }
 }
 
@@ -321,6 +455,10 @@ function Invoke-GenerationGateV1 {
             }
         }
     }
+
+    $shadowResult = Invoke-GenerationGateV1AstShadow -JsonPayload $JsonPayload
+    Apply-GenerationGateV1AstHybridErrors -ShadowResult $shadowResult -GateResult $result
+    Write-GenerationGateV1AstShadowArtifact -ShadowResult $shadowResult -GateResult $result
 
     return $result
 }

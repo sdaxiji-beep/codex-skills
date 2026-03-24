@@ -1,13 +1,7 @@
-generated/
 artifacts/
-keys/
+generated/
 node_modules/
-mcp/**/node_modules/
+keys/
 config/local-release.config.json
-*.log
-*.tmp
-*.bak
-*.orig
-*.jsonl
-
 deploy-config.json
+restored-*/

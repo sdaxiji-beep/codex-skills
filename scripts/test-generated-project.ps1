@@ -1,4 +1,4 @@
-﻿param([hashtable]$FlowResult, [hashtable]$Context)
+param([hashtable]$FlowResult, [hashtable]$Context)
 . "$PSScriptRoot\test-common.ps1"
 . "$PSScriptRoot\wechat-build-from-prompt.ps1"
 . "$PSScriptRoot\wechat-generated-project.ps1"
@@ -23,7 +23,8 @@ Assert-Equal $guard.reason "tourist_appid_not_deployable" "deploy guard reason s
 
 $outsideRejected = $false
 try {
-  Resolve-GeneratedProjectPath -ProjectPath (Join-Path ([System.IO.Path]::GetTempPath()) 'codex-skills-outside-project') | Out-Null
+  $repoRoot = Split-Path $PSScriptRoot -Parent
+  Resolve-GeneratedProjectPath -ProjectPath (Join-Path $repoRoot 'templates\\notebook') | Out-Null
 } catch {
   $outsideRejected = $true
 }

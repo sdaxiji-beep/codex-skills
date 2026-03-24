@@ -8,6 +8,7 @@
     "probe": "node probe-automator.js"
   },
   "dependencies": {
+    "acorn": "^8.16.0",
     "miniprogram-automator": "^0.12.1"
   }
 }

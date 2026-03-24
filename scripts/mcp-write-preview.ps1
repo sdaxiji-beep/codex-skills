@@ -1,7 +1,5 @@
-﻿[CmdletBinding()]
+[CmdletBinding()]
 param()
-
-. "$PSScriptRoot\wechat-release-setup.ps1"
 
 function New-McpPreviewResponse {
     param(
@@ -30,16 +28,34 @@ function Test-McpPreviewAllowlist {
 
     $candidate = [System.IO.Path]::GetFullPath($ProjectPath)
     $repoRoot = Split-Path $PSScriptRoot -Parent
-    $allowedRoots = @([System.IO.Path]::GetFullPath((Join-Path $repoRoot 'sandbox')))
-    try {
-        $config = Get-EffectiveDeployConfig -WorkspaceRoot $repoRoot
-        if ($config -and -not [string]::IsNullOrWhiteSpace([string]$config.projectRoot) -and (Test-Path [string]$config.projectRoot)) {
-            $allowedRoots += [System.IO.Path]::GetFullPath([string]$config.projectRoot)
+    $realProjectRoot = $null
+
+    $configCandidates = @()
+    if (-not [string]::IsNullOrWhiteSpace($env:WECHAT_DEPLOY_CONFIG_PATH)) {
+        $configCandidates += $env:WECHAT_DEPLOY_CONFIG_PATH
+    }
+    $configCandidates += (Join-Path $repoRoot 'config\local-release.config.json')
+    $configCandidates += (Join-Path $repoRoot 'deploy-config.json')
+
+    foreach ($configPath in $configCandidates) {
+        if (-not (Test-Path $configPath)) {
+            continue
+        }
+        try {
+            $deployConfig = Get-Content $configPath -Raw | ConvertFrom-Json -ErrorAction Stop
+            if ($deployConfig.projectRoot) {
+                $realProjectRoot = [System.IO.Path]::GetFullPath([string]$deployConfig.projectRoot)
+                break
+            }
+        }
+        catch {
         }
     }
-    catch {
+
+    $allowedRoots = @([System.IO.Path]::GetFullPath((Join-Path $repoRoot 'sandbox')))
+    if ($realProjectRoot) {
+        $allowedRoots += $realProjectRoot
     }
-    $allowedRoots = @($allowedRoots | Select-Object -Unique)
 
     foreach ($root in $allowedRoots) {
         if ($candidate.StartsWith($root, [System.StringComparison]::OrdinalIgnoreCase)) {
@@ -289,4 +305,3 @@ function Invoke-McpPreviewProject {
     $response.audit = $audit
     return $response
 }
-

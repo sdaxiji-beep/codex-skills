@@ -16,7 +16,6 @@ param()
 . "$PSScriptRoot\wechat-patch-app-json.ps1"
 . "$PSScriptRoot\wechat-doctor.ps1"
 . "$PSScriptRoot\wechat-bootstrap.ps1"
-. "$PSScriptRoot\wechat-release-setup.ps1"
 
 function Invoke-WechatReadonlyCheck {
     [CmdletBinding()]
@@ -67,7 +66,6 @@ function Get-WechatHelp {
 [Deploy]
   Invoke-WechatPreview
   Invoke-WechatUpload
-  Invoke-WechatReleaseSetup
   Invoke-PackNpm
   Invoke-DeployCloudFunction
   Invoke-DeployAllCloudFunctions
@@ -85,7 +83,6 @@ function Get-WechatHelp {
   Invoke-GeneratedProjectDeployGuard
   Invoke-GeneratedProjectSetAppId
   Invoke-GeneratedProjectUpload
-  Invoke-WechatReleaseSetup
   Note: generated projects are preview-first by default; upload is only for real appid + explicit intent
   Get-WechatDevtoolsPort
   Get-CloudFunctionList

@@ -1,13 +1,18 @@
-﻿[CmdletBinding()]
+[CmdletBinding()]
 param()
 
 . "$PSScriptRoot\wechat-deploy.ps1"
 . "$PSScriptRoot\wechat-get-port.ps1"
 
+function Get-McpDeployArtifactsRoot {
+    $repoRoot = Split-Path $PSScriptRoot -Parent
+    return (Join-Path $repoRoot 'artifacts')
+}
+
 function Get-CachedFullGateResult {
     param([int]$FreshnessMinutes = 10)
 
-    $cachePath = Join-Path (Split-Path $PSScriptRoot -Parent) 'artifacts\full-gate-cache.json'
+    $cachePath = Join-Path (Get-McpDeployArtifactsRoot) 'full-gate-cache.json'
     if (-not (Test-Path $cachePath)) {
         return $null
     }
@@ -74,7 +79,7 @@ function Save-FullGateResult {
         return
     }
 
-    $artifactsRoot = Join-Path (Split-Path $PSScriptRoot -Parent) 'artifacts'
+    $artifactsRoot = Get-McpDeployArtifactsRoot
     $cachePath = Join-Path $artifactsRoot 'full-gate-cache.json'
     New-Item -ItemType Directory -Force -Path $artifactsRoot | Out-Null
 
@@ -420,4 +425,3 @@ function Invoke-McpDeployCloudFunction {
     $response.audit = $audit
     return $response
 }
-

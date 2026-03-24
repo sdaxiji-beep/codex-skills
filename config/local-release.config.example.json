@@ -1,0 +1,13 @@
+{
+  "cloudFunctionRoot": ".\\path\\to\\your-project\\cloudfunctions",
+  "cloudEnv": "your-cloud-env",
+  "ignores": [
+    "node_modules/**/*",
+    ".git/**/*"
+  ],
+  "projectPath": ".\\path\\to\\your-project\\miniprogram",
+  "appid": "wx1234567890abcdef",
+  "privateKeyPath": ".\\keys\\your-private-key.key",
+  "projectRoot": ".\\path\\to\\your-project",
+  "devtoolsPort": "auto"
+}

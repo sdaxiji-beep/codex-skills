@@ -10,36 +10,35 @@ This server is readonly-only in v1.
 ## Start
 
 ```powershell
-cd <repo-root>\mcp\wechat-devtools-mcp
+cd G:\codex专属\mcp\wechat-devtools-mcp
 npm run start
 ```
 
 ## Required Environment
 
 - WeChat DevTools is installed and logged in.
-- Workspace scripts exist under `<repo-root>\scripts`.
+- Workspace scripts exist under `G:\codex专属\scripts`.
 - Local MCP registration points to this server:
-  - `<repo-root>\.agent\mcps.json`
+  - `G:\codex专属\.agent\mcps.json`
 
 ## Health Checks
 
 1. Server type check
 
 ```powershell
-$RepoRoot = (Get-Location).Path
-node -e "const fs=require('fs');const p=require('path').join(process.argv[1],'.agent','mcps.json');const j=JSON.parse(fs.readFileSync(p,'utf8'));console.log(Object.keys(j.mcpServers||{}))" $RepoRoot
+node -e "const fs=require('fs');const p='G:/codex专属/.agent/mcps.json';const j=JSON.parse(fs.readFileSync(p,'utf8'));console.log(Object.keys(j.mcpServers||{}))"
 ```
 
 2. Readonly check (status + history + trend)
 
 ```powershell
-powershell -ExecutionPolicy Bypass -Command ". .\scripts\wechat.ps1; Invoke-WechatReadonlyCheck -AsJson"
+powershell -ExecutionPolicy Bypass -Command ". 'G:\codex专属\scripts\wechat.ps1'; Invoke-WechatReadonlyCheck -AsJson"
 ```
 
 3. Full regression (optional)
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\test-wechat-skill.ps1 -SkipSmoke
+powershell -ExecutionPolicy Bypass -File G:\codex专属\scripts\test-wechat-skill.ps1 -SkipSmoke
 ```
 
 ## Expected Outputs
@@ -62,9 +61,9 @@ powershell -ExecutionPolicy Bypass -File .\scripts\test-wechat-skill.ps1 -SkipSm
 
 3. If trend/status check fails:
 - Inspect artifacts:
-  - `<repo-root>\artifacts\mcp-readonly-health-latest.json`
-  - `<repo-root>\artifacts\mcp-readonly-status-latest.json`
-  - `<repo-root>\artifacts\mcp-readonly-status-history.jsonl`
+  - `G:\codex专属\artifacts\mcp-readonly-health-latest.json`
+  - `G:\codex专属\artifacts\mcp-readonly-status-latest.json`
+  - `G:\codex专属\artifacts\mcp-readonly-status-history.jsonl`
 
 ## Change Policy
 

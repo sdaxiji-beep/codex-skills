@@ -37,9 +37,9 @@ Do not skip order. Do not parallel-enable multiple tools.
 ## Validation Before Any Enable Action
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\mcp-write-gate-status.ps1 -AsJson
-powershell -ExecutionPolicy Bypass -File .\scripts\mcp-write-gate-dryrun.ps1 -AsJson
-powershell -ExecutionPolicy Bypass -File .\scripts\mcp-write-readiness.ps1 -AsJson
+powershell -ExecutionPolicy Bypass -File G:\codex专属\scripts\mcp-write-gate-status.ps1 -AsJson
+powershell -ExecutionPolicy Bypass -File G:\codex专属\scripts\mcp-write-gate-dryrun.ps1 -AsJson
+powershell -ExecutionPolicy Bypass -File G:\codex专属\scripts\mcp-write-readiness.ps1 -AsJson
 ```
 
 ## Safety Boundary

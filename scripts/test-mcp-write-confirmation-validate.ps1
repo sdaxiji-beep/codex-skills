@@ -1,11 +1,11 @@
-﻿param([hashtable]$FlowResult, [hashtable]$Context)
+param([hashtable]$FlowResult, [hashtable]$Context)
 
 . "$PSScriptRoot\test-common.ps1"
 
 $validPayload = @{
     request_id = 'preview-20260319-000001'
     action = 'preview_project'
-    scope = 'external-project'
+    scope = 'current-project'
     summary = 'Generate preview QR for current project state'
     risk_level = 'low'
     requires_explicit_yes = $true
@@ -20,7 +20,7 @@ Assert-True ($valid.valid -eq $true) 'valid confirmation payload should set vali
 $invalidPayload = @{
     request_id = 'preview-20260319-000002'
     action = 'preview_project'
-    scope = 'external-project'
+    scope = 'current-project'
     summary = 'Generate preview QR for current project state'
     risk_level = 'unknown'
     requires_explicit_yes = $false
