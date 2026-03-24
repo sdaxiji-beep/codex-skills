@@ -169,7 +169,8 @@ function New-TestList {
         'test-report-generation.ps1',
         'test-report-refresh-status.ps1',
         'test-report-scenarios-fallback.ps1',
-        'test-p2-contract-aggregation.ps1'
+        'test-p2-contract-aggregation.ps1',
+        'test-diagnostics-focused.ps1'
     )
 
     $fullOnly = @(

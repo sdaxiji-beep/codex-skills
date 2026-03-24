@@ -4,7 +4,11 @@ const path = require('path');
 
 const pageConfig = require(path.join(__dirname, 'config', 'page-elements.json'));
 
-const PORT = 9420;
+const requestedPort = Number.parseInt(
+  process.env.WECHAT_DEVTOOLS_PORT || process.env.WECHAT_AUTOMATOR_PORT || '9420',
+  10
+);
+const PORT = Number.isFinite(requestedPort) && requestedPort > 0 ? requestedPort : 9420;
 
 function checkPort(port, timeout = 500) {
   return new Promise((resolve) => {
@@ -29,7 +33,7 @@ function checkPort(port, timeout = 500) {
 async function probe() {
   const portOpen = await checkPort(PORT, 500);
   if (!portOpen) {
-    console.error('[PROBE] Port 9420 unavailable, skip automator.');
+    console.error(`[PROBE] Port ${PORT} unavailable, skip automator.`);
     process.exit(2);
   }
 
