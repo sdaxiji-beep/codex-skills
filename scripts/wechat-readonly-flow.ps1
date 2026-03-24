@@ -49,6 +49,22 @@ function Test-AutomatorPort {
     return [bool]$match
 }
 
+function Get-FreeAutomatorPort {
+    param(
+        [int]$PreferredPort = 9420,
+        [int]$MaxScan = 50
+    )
+
+    $candidatePorts = @($PreferredPort) + (($PreferredPort + 1)..($PreferredPort + $MaxScan))
+    foreach ($candidate in $candidatePorts) {
+        if (-not (Test-TcpPort -Port $candidate -TimeoutMs 250)) {
+            return $candidate
+        }
+    }
+
+    throw "No free automator port available near $PreferredPort"
+}
+
 function Test-TcpPort {
     param(
         [int]$Port,
@@ -94,6 +110,24 @@ function Invoke-ExternalCommand {
     }
 }
 
+function Get-ExternalCommandText {
+    param($CommandResult)
+
+    return (([string]$CommandResult.StdOut) + "`n" + ([string]$CommandResult.StdErr)).Trim()
+}
+
+function Test-WechatCliFatalOutput {
+    param([string]$Text)
+
+    if ([string]::IsNullOrWhiteSpace($Text)) {
+        return $false
+    }
+
+    return ($Text -match 'invalid appid' -or
+        $Text -match 'code:\s*10' -or
+        $Text -match '\[error\]')
+}
+
 function Ensure-AutomatorPort {
     param(
         [string]$ProjectPath = '',
@@ -114,11 +148,20 @@ function Ensure-AutomatorPort {
         throw "WeChat CLI not found: $cliPath"
     }
 
+    if (Test-AutomatorPort -Port $AutoPort) {
+        Write-Verbose "[AUTOMATOR] Port $AutoPort already available."
+        return $AutoPort
+    }
+
     Write-Verbose "[AUTOMATOR] Opening project before starting automation port $AutoPort."
-    Start-Process -FilePath $cliPath -ArgumentList @(
+    $openCmd = Invoke-ExternalCommand -FilePath $cliPath -ArgumentList @(
         'open',
         '--project', $ProjectPath
-    ) -WindowStyle Hidden | Out-Null
+    ) -TimeoutMs 30000
+    $openText = Get-ExternalCommandText -CommandResult $openCmd
+    if (Test-WechatCliFatalOutput -Text $openText) {
+        throw "Open project for automator failed: $openText"
+    }
 
     Start-Sleep -Seconds 2
 
@@ -135,42 +178,26 @@ function Ensure-AutomatorPort {
     if (-not (Test-AutomatorPort -Port $AutoPort)) {
         throw "Automation port $AutoPort unavailable after CLI startup."
     }
+
+    return $AutoPort
 }
 
 function Get-AutomatorPageInfo {
     param(
         [string]$ProjectPath = '',
-        [int]$AutoPort = 9420
+        [int]$AutoPort = 0
     )
 
     if ([string]::IsNullOrWhiteSpace($ProjectPath)) {
         $ProjectPath = Get-ReadonlyDefaultProjectPath
     }
 
-    $cliPath = Get-WechatCliPath
-    if (-not (Test-Path $cliPath)) {
-        throw "WeChat CLI not found: $cliPath"
+    if ($AutoPort -le 0) {
+        $AutoPort = Get-FreeAutomatorPort
     }
 
-    Write-Verbose "[AUTOMATOR] Starting session on port $AutoPort."
-    $cliArgs = "auto --project `"$ProjectPath`" --auto-port $AutoPort"
-    $cliProc = Start-Process -FilePath $cliPath `
-        -ArgumentList $cliArgs `
-        -NoNewWindow -PassThru
-    $started = $cliProc.WaitForExit(10000)
-    if (-not $started) {
-        $cliProc.Kill()
-        Write-Verbose '[AUTOMATOR] CLI startup timed out, fallback.'
-        return $null
-    }
-    if ($cliProc.ExitCode -ne 0) {
-        Write-Verbose "[AUTOMATOR] CLI failed exitCode=$($cliProc.ExitCode), fallback."
-        return $null
-    }
-    Write-Verbose "[AUTOMATOR] cli exit code: $($cliProc.ExitCode)"
-    Start-Sleep -Seconds 2
-
-    Ensure-AutomatorPort -ProjectPath $ProjectPath -AutoPort $AutoPort
+    Write-Verbose "[AUTOMATOR] Ensuring automation port $AutoPort."
+    $AutoPort = Ensure-AutomatorPort -ProjectPath $ProjectPath -AutoPort $AutoPort
 
     $probeScript = Join-Path (Get-WorkspaceRoot) 'probe-automator.js'
     if (-not (Test-Path $probeScript)) {
@@ -191,27 +218,29 @@ function Get-AutomatorPageInfo {
                 Write-Verbose "[AUTOMATOR] stderr: $stderr"
                 Write-Verbose "[AUTOMATOR] stdout: $stdout"
 
-                if ($cmd.ExitCode -ne 0) {
-                    Write-Verbose "[AUTOMATOR] probe failed, exitCode=$($cmd.ExitCode)"
-                    return $null
-                }
-
                 $jsonLine = ($stdout -split "`n" |
                     ForEach-Object { $_.Trim() } |
                     Where-Object { $_ -match '^\{' } |
                     Select-Object -Last 1)
 
-                if (-not $jsonLine) {
-                    Write-Verbose '[AUTOMATOR] no JSON line found.'
-                    Write-Verbose "[AUTOMATOR] stdout raw: $stdout"
+                if ($jsonLine) {
+                    try {
+                        return ($jsonLine | ConvertFrom-Json)
+                    }
+                    catch {
+                        Write-Verbose "[AUTOMATOR] JSON parse failed: $_"
+                        return $null
+                    }
+                }
+
+                if ($cmd.ExitCode -ne 0 -and -not [string]::IsNullOrWhiteSpace([string]$cmd.ExitCode)) {
+                    Write-Verbose "[AUTOMATOR] probe failed, exitCode=$($cmd.ExitCode)"
                     return $null
                 }
 
-                try {
-                    return ($jsonLine | ConvertFrom-Json)
-                }
-                catch {
-                    Write-Verbose "[AUTOMATOR] JSON parse failed: $_"
+                if (-not $jsonLine) {
+                    Write-Verbose '[AUTOMATOR] no JSON line found.'
+                    Write-Verbose "[AUTOMATOR] stdout raw: $stdout"
                     return $null
                 }
             }
@@ -476,14 +505,14 @@ function Invoke-FlowViaAutomator {
 
     try {
         $servicePort = Get-WechatDevtoolsPort
-        $automatorPort = 9420
+        $automatorPort = Get-FreeAutomatorPort
         Write-Verbose "[AUTOMATOR] Service port: $servicePort"
         Write-Verbose "[AUTOMATOR] Automator port: $automatorPort"
-        if (-not (Test-TcpPort -Port $automatorPort -TimeoutMs 500)) {
-            Write-Verbose "[AUTOMATOR] Port $automatorPort unavailable, fallback immediately."
+        $pageInfo = Get-AutomatorPageInfo -ProjectPath $ProjectPath -AutoPort $automatorPort
+        if ($null -eq $pageInfo) {
+            Write-Verbose "[AUTOMATOR] Page probe unavailable, fallback."
             return Invoke-Flow -Variant $Variant
         }
-        $pageInfo = Get-AutomatorPageInfo -ProjectPath $ProjectPath -AutoPort $automatorPort
         return (New-FlowResult -Variant $Variant -PageInfo $pageInfo -Source 'automator_current_page_v1')
     }
     catch {

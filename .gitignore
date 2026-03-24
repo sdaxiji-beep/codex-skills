@@ -5,3 +5,4 @@ keys/
 config/local-release.config.json
 deploy-config.json
 restored-*/
+diagnostics/screenshot/captures/
