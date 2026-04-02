@@ -1,6 +1,15 @@
 [CmdletBinding()]
 param()
 
+$script:WechatDevtoolsPortCache = if ($script:WechatDevtoolsPortCache) {
+    $script:WechatDevtoolsPortCache
+} else {
+    @{
+        port = 0
+        cached_at = [datetime]::MinValue
+    }
+}
+
 function Test-WechatPortHttp {
     param([int]$Port)
 
@@ -83,16 +92,36 @@ function Get-NetstatListeningCandidates {
 function Get-WechatDevtoolsPort {
     param([int]$DefaultPort = 34757)
 
+    $cacheTtlSeconds = 30
+    $cachedPort = [int]$script:WechatDevtoolsPortCache.port
+    $cachedAt = [datetime]$script:WechatDevtoolsPortCache.cached_at
+    if (
+        $cachedPort -gt 1024 -and
+        ((Get-Date) - $cachedAt).TotalSeconds -lt $cacheTtlSeconds -and
+        (Test-WechatPortHttp -Port $cachedPort)
+    ) {
+        Write-Verbose "[PORT] reuse cached devtools port: $cachedPort"
+        return $cachedPort
+    }
+
     $idePorts = @(Get-IdePortCandidates)
     foreach ($port in $idePorts) {
         if (Test-WechatPortHttp -Port $port) {
             Write-Verbose "[PORT] detected and reachable via .ide: $port"
+            $script:WechatDevtoolsPortCache = @{
+                port = [int]$port
+                cached_at = Get-Date
+            }
             return $port
         }
     }
 
     if ($idePorts.Count -gt 0) {
         Write-Verbose "[PORT] .ide found but HTTP unreachable, use latest ide port: $($idePorts[0])"
+        $script:WechatDevtoolsPortCache = @{
+            port = [int]$idePorts[0]
+            cached_at = Get-Date
+        }
         return [int]$idePorts[0]
     }
 
@@ -111,10 +140,18 @@ function Get-WechatDevtoolsPort {
     foreach ($port in $probePorts) {
         if (Test-WechatPortHttp -Port $port) {
             Write-Verbose "[PORT] detected by HTTP probe: $port"
+            $script:WechatDevtoolsPortCache = @{
+                port = [int]$port
+                cached_at = Get-Date
+            }
             return $port
         }
     }
 
     Write-Verbose "[PORT] unable to detect active devtools port, fallback default: $DefaultPort"
+    $script:WechatDevtoolsPortCache = @{
+        port = [int]$DefaultPort
+        cached_at = Get-Date
+    }
     return $DefaultPort
 }

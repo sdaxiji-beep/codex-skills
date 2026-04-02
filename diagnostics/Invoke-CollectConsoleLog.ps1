@@ -81,3 +81,4 @@ function Invoke-CollectConsoleLog {
     timestamp = (Get-Date -Format "o")
   }
 }
+

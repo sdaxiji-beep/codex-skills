@@ -8,6 +8,54 @@ param(
 
 . "$PSScriptRoot\wechat-readonly-flow.ps1"
 . "$PSScriptRoot\test-common.ps1"
+. "$PSScriptRoot\Get-SharedDiagnosticsQuickCheck.ps1"
+. "$PSScriptRoot\Get-SharedDoctorFixtures.ps1"
+. "$PSScriptRoot\Get-SharedReadonlyFlow.ps1"
+
+function ConvertTo-TestHashtableDeep {
+    param(
+        [Parameter(ValueFromPipeline = $true)]
+        $InputObject
+    )
+
+    if ($null -eq $InputObject) {
+        return $null
+    }
+
+    if ($InputObject -is [System.Collections.IDictionary]) {
+        $table = @{}
+        foreach ($key in $InputObject.Keys) {
+            $table[$key] = ConvertTo-TestHashtableDeep -InputObject $InputObject[$key]
+        }
+        return $table
+    }
+
+    if ($InputObject -is [pscustomobject]) {
+        $table = @{}
+        foreach ($property in $InputObject.PSObject.Properties) {
+            $table[$property.Name] = ConvertTo-TestHashtableDeep -InputObject $property.Value
+        }
+        return $table
+    }
+
+    if ($InputObject -is [System.Collections.IEnumerable] -and $InputObject -isnot [string]) {
+        $items = New-Object System.Collections.Generic.List[object]
+        foreach ($item in $InputObject) {
+            [void]$items.Add((ConvertTo-TestHashtableDeep -InputObject $item))
+        }
+        return ,($items.ToArray())
+    }
+
+    return $InputObject
+}
+
+function Copy-FlowResultForTest {
+    param([hashtable]$FlowResult)
+
+    $json = $FlowResult | ConvertTo-Json -Depth 12
+    $copy = $json | ConvertFrom-Json -ErrorAction Stop
+    return (ConvertTo-TestHashtableDeep -InputObject $copy)
+}
 
 function Invoke-Layer0Check {
     $files = Get-ChildItem $PSScriptRoot -Filter '*.ps1' -File
@@ -39,7 +87,8 @@ function Invoke-TestFile {
 
     $sw = [System.Diagnostics.Stopwatch]::StartNew()
     try {
-        $result = & $Path -FlowResult $FlowResult -Context $Context
+        $isolatedFlowResult = Copy-FlowResultForTest -FlowResult $FlowResult
+        $result = & $Path -FlowResult $isolatedFlowResult -Context $Context
         $sw.Stop()
         $exitCode = 0
         if ($result.PSObject.Properties.Name -contains 'exit_code') {
@@ -85,7 +134,10 @@ function New-TestList {
         'test-readonly-flow-page-validation.ps1',
         'test-readonly-flow-page-validation-failed.ps1',
         'test-readonly-flow-page-validation-contract-v2.ps1',
+        'test-automator-project-port.ps1',
         'test-automator-page-signature.ps1',
+        'test-p3-operational-fixtures.ps1',
+        'test-p3-operational-cache-stability.ps1',
         'test-page-semantic.ps1',
         'test-write-guard.ps1',
         'test-write-guard-confirm.ps1',
@@ -113,7 +165,11 @@ function New-TestList {
         'test-wechat-mcp-tool-boundary-doc-sync.ps1',
         'test-external-client-entrypoints-doc.ps1',
         'test-external-client-payload-contract-doc.ps1',
+        'test-validation-tiers-doc.ps1',
+        'test-cleanup-runtime-data.ps1',
+        'test-public-api-surface-doc.ps1',
         'test-external-client-boundary-dry-run.ps1',
+        'test-diagnostics-focused.ps1',
         'test-release-package-candidate.ps1',
         'test-mcp-v1-freeze.ps1',
         'test-mcp-stage3-preflight.ps1',
@@ -169,11 +225,12 @@ function New-TestList {
         'test-report-generation.ps1',
         'test-report-refresh-status.ps1',
         'test-report-scenarios-fallback.ps1',
-        'test-p2-contract-aggregation.ps1',
-        'test-diagnostics-focused.ps1'
+        'test-p2-contract-aggregation.ps1'
     )
 
     $fullOnly = @(
+        'test-p3-operational-fixtures.ps1',
+        'test-p3-operational-cache-stability.ps1',
         'test-deploy-guard.ps1',
         'test-agentic-loop.ps1',
         'test-mcp-readonly.ps1',
@@ -218,7 +275,13 @@ function New-SummaryDocument {
         [array]$Results,
         [hashtable]$FlowResult,
         $FastSummary,
-        $MiniSummary
+        $MiniSummary,
+        [hashtable]$PreflightBreakdown,
+        [double]$PreflightSeconds,
+        [double]$UnitSeconds,
+        [double]$P2FastSeconds,
+        [double]$P2MiniSeconds,
+        [double]$TotalWallSeconds
     )
 
     $doc = @{
@@ -229,6 +292,21 @@ function New-SummaryDocument {
         passed    = @($Results | Where-Object { $_.pass }).Count
         failed    = @($Results | Where-Object { -not $_.pass }).Count
         success   = @($Results | Where-Object { -not $_.pass }).Count -eq 0
+        timing    = @{
+            preflight_seconds = [Math]::Round($PreflightSeconds, 2)
+            preflight_breakdown = @{
+                diagnostics_seconds = [Math]::Round([double]$PreflightBreakdown.DiagnosticsSeconds, 3)
+                doctor_seconds = [Math]::Round([double]$PreflightBreakdown.DoctorSeconds, 3)
+                p3_fixture_seconds = [Math]::Round([double]$PreflightBreakdown.P3FixtureSeconds, 3)
+                readonly_seconds = [Math]::Round([double]$PreflightBreakdown.ReadonlySeconds, 3)
+                port_seconds = [Math]::Round([double]$PreflightBreakdown.PortSeconds, 3)
+            }
+            unit_seconds = [Math]::Round($UnitSeconds, 2)
+            p2_fast_seconds = [Math]::Round($P2FastSeconds, 2)
+            p2_mini_seconds = [Math]::Round($P2MiniSeconds, 2)
+            internal_seconds = [Math]::Round(($UnitSeconds + $P2FastSeconds + $P2MiniSeconds), 2)
+            total_wall_seconds = [Math]::Round($TotalWallSeconds, 2)
+        }
         p2_probe  = @{
             ready                      = $true
             required_total             = 8
@@ -276,10 +354,68 @@ if ($GuardCheckOnly) {
     exit 0
 }
 
-$flowResult = Invoke-FlowViaAutomator
+$totalSw = [System.Diagnostics.Stopwatch]::StartNew()
+$repoRoot = Split-Path $PSScriptRoot -Parent
+$preflightSw = [System.Diagnostics.Stopwatch]::StartNew()
+$preflightBreakdown = @{
+    DiagnosticsSeconds = 0.0
+    DoctorSeconds = 0.0
+    P3FixtureSeconds = 0.0
+    ReadonlySeconds = 0.0
+    PortSeconds = 0.0
+}
+$stepSw = [System.Diagnostics.Stopwatch]::StartNew()
+$sharedDiagnostics = Get-SharedDiagnosticsQuickCheckResult -RepoRoot $repoRoot
+$stepSw.Stop()
+$preflightBreakdown.DiagnosticsSeconds = $stepSw.Elapsed.TotalSeconds
+$stepSw.Restart()
+$sharedDoctorFixtures = Get-SharedDoctorFixtures -RepoRoot $repoRoot
+$stepSw.Stop()
+$preflightBreakdown.DoctorSeconds = $stepSw.Elapsed.TotalSeconds
+$stepSw.Restart()
+$sharedP3Fixtures = Get-SharedP3OperationalFixtures -RepoRoot $repoRoot
+$stepSw.Stop()
+$preflightBreakdown.P3FixtureSeconds = $stepSw.Elapsed.TotalSeconds
+$stepSw.Restart()
+$sharedReadonlyFlow = Get-SharedReadonlyFlowResult -RepoRoot $repoRoot
+$stepSw.Stop()
+$preflightBreakdown.ReadonlySeconds = $stepSw.Elapsed.TotalSeconds
+$flowResult = $sharedReadonlyFlow.flowResult
+$sharedDevtoolsPort = 0
+if ($null -ne $sharedReadonlyFlow -and $sharedReadonlyFlow.PSObject.Properties.Name -contains 'devtoolsPort') {
+    $sharedDevtoolsPort = [int]$sharedReadonlyFlow.devtoolsPort
+}
+if ($sharedDevtoolsPort -le 0 -and $null -ne $flowResult -and $flowResult.ContainsKey('devtools_port')) {
+    $sharedDevtoolsPort = [int]$flowResult.devtools_port
+}
+if ($sharedDevtoolsPort -le 0) {
+    $stepSw.Restart()
+    $sharedDevtoolsPort = Get-WechatDevtoolsPort
+    $stepSw.Stop()
+    $preflightBreakdown.PortSeconds = $stepSw.Elapsed.TotalSeconds
+}
+$preflightSw.Stop()
 $context = @{
     ScriptRoot = $PSScriptRoot
-    ArtifactsRoot = (Join-Path (Split-Path $PSScriptRoot -Parent) 'artifacts\wechat-devtools')
+    ArtifactsRoot = (Join-Path $repoRoot 'artifacts\wechat-devtools')
+    DiagnosticsQuickCheckSummary = $sharedDiagnostics.summary
+    DiagnosticsQuickCheckArtifactPath = $sharedDiagnostics.artifactPath
+    DoctorSharedResult = $sharedDoctorFixtures.doctorResult
+    DoctorReportPathResult = $sharedDoctorFixtures.doctorResult
+    DoctorRuntimeResult = $sharedDoctorFixtures.doctorResult
+    DoctorSimulatedFailureResult = $sharedDoctorFixtures.doctorFailureResult
+    McpBoundaryDescribeContract = $sharedP3Fixtures.describeContract
+    McpBoundaryExecutionProfile = $sharedP3Fixtures.executionProfile
+    McpBoundaryContracts = $sharedP3Fixtures.boundaryContracts
+    McpBoundaryValidWorkspace = $sharedP3Fixtures.boundaryWorkspace
+    McpBoundaryValidPayloadPath = $sharedP3Fixtures.boundaryPayloadPath
+    ExternalClientDryRunWorkspace = $sharedP3Fixtures.externalWorkspace
+    ExternalClientDryRunPayloadPath = $sharedP3Fixtures.externalPayloadPath
+    GeneratedNotebookProject = $sharedP3Fixtures.generatedNotebookProject
+    GeneratedNotebookEligibleProject = $sharedP3Fixtures.generatedNotebookEligibleProject
+    GeneratedTodoProject = $sharedP3Fixtures.generatedTodoProject
+    GeneratedShoplistProject = $sharedP3Fixtures.generatedShoplistProject
+    SharedDevtoolsPort = $sharedDevtoolsPort
 }
 
 $unitSw = [System.Diagnostics.Stopwatch]::StartNew()
@@ -296,13 +432,37 @@ $miniSw = [System.Diagnostics.Stopwatch]::StartNew()
 $miniSummary = & (Join-Path $PSScriptRoot 'test-p2-mini.ps1') -Results $results
 $miniSw.Stop()
 
-$summary = New-SummaryDocument -Results $results -FlowResult $flowResult -FastSummary $fastSummary -MiniSummary $miniSummary
+$totalSw.Stop()
+$summary = New-SummaryDocument `
+    -Results $results `
+    -FlowResult $flowResult `
+    -FastSummary $fastSummary `
+    -MiniSummary $miniSummary `
+    -PreflightBreakdown $preflightBreakdown `
+    -PreflightSeconds $preflightSw.Elapsed.TotalSeconds `
+    -UnitSeconds $unitSw.Elapsed.TotalSeconds `
+    -P2FastSeconds $fastSw.Elapsed.TotalSeconds `
+    -P2MiniSeconds $miniSw.Elapsed.TotalSeconds `
+    -TotalWallSeconds $totalSw.Elapsed.TotalSeconds
 $artifactsDir = Join-Path $context.ArtifactsRoot 'tests'
 New-Item -ItemType Directory -Force -Path $artifactsDir | Out-Null
 $summaryPath = Join-Path $artifactsDir 'test-wechat-skill-summary-latest.json'
 $summary | ConvertTo-Json -Depth 10 | Set-Content -Path $summaryPath -Encoding UTF8
 
 $totalMs = $unitSw.Elapsed.TotalMilliseconds + $fastSw.Elapsed.TotalMilliseconds + $miniSw.Elapsed.TotalMilliseconds
+Write-Output '========= Timing Summary ========='
+Write-Output ('preflight  : {0}s' -f [Math]::Round($preflightSw.Elapsed.TotalSeconds, 2))
+Write-Output ('  diag     : {0}s' -f [Math]::Round([double]$preflightBreakdown.DiagnosticsSeconds, 3))
+Write-Output ('  doctor   : {0}s' -f [Math]::Round([double]$preflightBreakdown.DoctorSeconds, 3))
+Write-Output ('  p3       : {0}s' -f [Math]::Round([double]$preflightBreakdown.P3FixtureSeconds, 3))
+Write-Output ('  readonly : {0}s' -f [Math]::Round([double]$preflightBreakdown.ReadonlySeconds, 3))
+Write-Output ('  port     : {0}s' -f [Math]::Round([double]$preflightBreakdown.PortSeconds, 3))
+Write-Output ('unit       : {0}s' -f [Math]::Round($unitSw.Elapsed.TotalSeconds, 2))
+Write-Output ('p2-fast    : {0}s' -f [Math]::Round($fastSw.Elapsed.TotalSeconds, 2))
+Write-Output ('p2-mini    : {0}s' -f [Math]::Round($miniSw.Elapsed.TotalSeconds, 2))
+Write-Output ('internal   : {0}s' -f [Math]::Round(($totalMs / 1000), 2))
+Write-Output ('wall-clock : {0}s' -f [Math]::Round($totalSw.Elapsed.TotalSeconds, 2))
+Write-Output '==============================='
 @(
     '========= 耗时汇总 =========',
     ('单测        : {0}s' -f [Math]::Round($unitSw.Elapsed.TotalSeconds, 2)),

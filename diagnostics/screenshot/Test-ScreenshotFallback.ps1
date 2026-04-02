@@ -2,7 +2,8 @@
 
 Write-Host "`n[test] Start screenshot fallback minimal check..." -ForegroundColor Cyan
 
-$projectPath = Join-Path 'G:\' ([string]([char]0x5C0F) + [char]0x7A0B + [char]0x5E8F + [char]0x6D4B + [char]0x8BD5)
+$repoRoot = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
+$projectPath = Join-Path $repoRoot 'sandbox\fake-project'
 
 $result = Invoke-ScreenshotFallback `
   -PagePath    "pages/store/home/index" `
@@ -11,7 +12,6 @@ $result = Invoke-ScreenshotFallback `
 Write-Host "`n[test] Result:" -ForegroundColor Cyan
 $result | Format-List *
 
-# Validate required fields
 $requiredFields = @(
   "issue_id","status","source","page_path",
   "project_path","severity","retryable","timestamp"

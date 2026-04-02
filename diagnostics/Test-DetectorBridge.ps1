@@ -1,10 +1,11 @@
-. "$PSScriptRoot\Invoke-DetectorBridge.ps1"
+. "$PSScriptRoot\Get-SharedDiagnosticsDetectorResults.ps1"
 
 Write-Host "`n[test] Start DetectorBridge minimal check..." -ForegroundColor Cyan
 
-$projectPath = Join-Path 'G:\' ([string]([char]0x5C0F) + [char]0x7A0B + [char]0x5E8F + [char]0x6D4B + [char]0x8BD5)
+$repoRoot = Split-Path $PSScriptRoot -Parent
+$projectPath = Join-Path $repoRoot 'sandbox\fake-project'
 
-$result = Invoke-DetectorBridge `
+$result = Get-SharedDetectorBridgeResult `
   -PagePath    "pages/store/home/index" `
   -ProjectPath $projectPath
 

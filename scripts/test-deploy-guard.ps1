@@ -3,20 +3,10 @@ param([hashtable]$FlowResult,[hashtable]$Context)
 . "$PSScriptRoot\wechat-deploy.ps1"
 
 $config = Get-DeployConfig
-if (
-    [string]::IsNullOrWhiteSpace($config.cloudEnv) -or
-    [string]::IsNullOrWhiteSpace($config.appid) -or
-    (-not (Test-Path $config.privateKeyPath)) -or
-    (-not (Test-Path $config.cloudFunctionRoot))
-) {
-    New-TestResult -Name 'deploy-guard' -Data @{
-        pass      = $true
-        exit_code = 0
-        skipped   = $true
-        reason    = 'shared_mode_missing_real_release_config'
-    }
-    return
-}
+Assert-NotEmpty $config.cloudEnv 'cloudEnv must exist in deploy config.'
+Assert-True (Test-Path $config.privateKeyPath) 'private key must exist.'
+Assert-NotEmpty $config.appid 'appid must exist in deploy config.'
+Assert-True (Test-Path $config.cloudFunctionRoot) 'cloud function root must exist.'
 
 $funcs = Get-CloudFunctionList
 Assert-True ($funcs.Count -gt 0) 'should have cloud functions.'

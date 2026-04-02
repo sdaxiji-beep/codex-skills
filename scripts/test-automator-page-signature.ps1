@@ -4,8 +4,10 @@ param([hashtable]$FlowResult,[hashtable]$Context)
 
 $tcp = New-Object System.Net.Sockets.TcpClient
 $portOpen = $false
+$projectPath = Get-ReadonlyDefaultProjectPath
+$autoPort = Get-ProjectScopedAutomatorPort -ProjectPath $projectPath
 try {
-    $portOpen = $tcp.ConnectAsync('127.0.0.1', 9420).Wait(500)
+    $portOpen = $tcp.ConnectAsync('127.0.0.1', $autoPort).Wait(150)
 }
 finally {
     $tcp.Close()
@@ -19,7 +21,7 @@ if (-not $portOpen) {
     return
 }
 
-$auto = Invoke-FlowViaAutomator
+$auto = Invoke-FlowViaAutomator -ProjectPath $projectPath
 $firstCandidate = @($auto.page_signature.candidates)[0]
 Assert-Equal $auto.page_signature.source 'automator_current_page_v1' 'source must be automator_current_page_v1.'
 Assert-Equal $auto.page_signature.confidence 1.0 'Automator confidence must be 1.0.'
@@ -42,4 +44,5 @@ New-TestResult -Name 'automator-page-signature' -Data @{
     page_elements      = $auto.page_signature.page_elements
     page_element_count = $auto.page_signature.page_element_count
     first_candidate    = $firstCandidate
+    auto_port          = $autoPort
 }

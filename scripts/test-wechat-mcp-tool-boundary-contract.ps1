@@ -1,6 +1,10 @@
 param([hashtable]$FlowResult, [hashtable]$Context)
 . "$PSScriptRoot\test-common.ps1"
 
+if ($null -eq $Context) {
+    $Context = @{}
+}
+
 $scriptPath = Join-Path $PSScriptRoot 'wechat-mcp-tool-boundary.ps1'
 Assert-True (Test-Path $scriptPath) 'wechat-mcp-tool-boundary.ps1 should exist'
 
@@ -34,22 +38,51 @@ $patchPayload = @'
 }
 '@
 
-$workspace = Join-Path ([System.IO.Path]::GetTempPath()) ("mcp-boundary-contract-" + [guid]::NewGuid().ToString('N'))
-New-Item -ItemType Directory -Path $workspace -Force | Out-Null
+$workspace = $null
+$cleanupWorkspace = $false
+$hasSharedContext = $null -ne $Context
+$reuseWorkspace = $Context.ContainsKey('McpBoundaryValidWorkspace') -and (Test-Path $Context.McpBoundaryValidWorkspace)
+
+if ($reuseWorkspace) {
+    $workspace = $Context.McpBoundaryValidWorkspace
+}
+else {
+    $workspace = Join-Path ([System.IO.Path]::GetTempPath()) ("mcp-boundary-contract-" + [guid]::NewGuid().ToString('N'))
+    New-Item -ItemType Directory -Path $workspace -Force | Out-Null
+    if ($hasSharedContext) {
+        $Context.McpBoundaryValidWorkspace = $workspace
+        $Context.McpBoundaryValidPagePayload = $pagePayload
+        $Context.McpBoundaryValidComponentPayload = $componentPayload
+        $Context.McpBoundaryValidPatchPayload = $patchPayload
+    }
+    else {
+        $cleanupWorkspace = $true
+    }
+}
 
 try {
-    $validatePage = & $scriptPath -Operation validate_page_bundle -JsonPayload $pagePayload -TargetWorkspace $workspace | ConvertFrom-Json
+    $cachedBoundaryContracts = if ($hasSharedContext -and $Context.ContainsKey('McpBoundaryContracts')) { $Context.McpBoundaryContracts } else { $null }
+
+    if ($hasSharedContext) {
+        $payloadPath = Join-Path $workspace 'page-bundle.json'
+        if ((-not $Context.ContainsKey('McpBoundaryValidPayloadPath')) -or -not (Test-Path $Context.McpBoundaryValidPayloadPath)) {
+            [System.IO.File]::WriteAllText($payloadPath, $pagePayload, (New-Object System.Text.UTF8Encoding($false)))
+            $Context.McpBoundaryValidPayloadPath = $payloadPath
+        }
+    }
+
+    $validatePage = if ($null -ne $cachedBoundaryContracts) { $cachedBoundaryContracts.page_validate } else { & $scriptPath -Operation validate_page_bundle -JsonPayload $pagePayload -TargetWorkspace $workspace | ConvertFrom-Json }
     Assert-Equal $validatePage.status 'success' 'validate_page_bundle should return success envelope'
     Assert-Equal $validatePage.gate_status 'pass' 'validate_page_bundle should pass for valid payload'
 
-    $validateComponent = & $scriptPath -Operation validate_component_bundle -JsonPayload $componentPayload -TargetWorkspace $workspace | ConvertFrom-Json
+    $validateComponent = if ($null -ne $cachedBoundaryContracts) { $cachedBoundaryContracts.component_validate } else { & $scriptPath -Operation validate_component_bundle -JsonPayload $componentPayload -TargetWorkspace $workspace | ConvertFrom-Json }
     Assert-Equal $validateComponent.status 'success' 'validate_component_bundle should return success envelope'
     Assert-Equal $validateComponent.gate_status 'pass' 'validate_component_bundle should pass for valid payload'
 
-    $applyPage = & $scriptPath -Operation apply_page_bundle -JsonPayload $pagePayload -TargetWorkspace $workspace | ConvertFrom-Json
+    $applyPage = if ($null -ne $cachedBoundaryContracts) { $cachedBoundaryContracts.page_apply } else { & $scriptPath -Operation apply_page_bundle -JsonPayload $pagePayload -TargetWorkspace $workspace | ConvertFrom-Json }
     Assert-Equal $applyPage.status 'success' 'apply_page_bundle should succeed for valid payload'
 
-    $applyComponent = & $scriptPath -Operation apply_component_bundle -JsonPayload $componentPayload -TargetWorkspace $workspace | ConvertFrom-Json
+    $applyComponent = if ($null -ne $cachedBoundaryContracts) { $cachedBoundaryContracts.component_apply } else { & $scriptPath -Operation apply_component_bundle -JsonPayload $componentPayload -TargetWorkspace $workspace | ConvertFrom-Json }
     Assert-Equal $applyComponent.status 'success' 'apply_component_bundle should succeed for valid payload'
 
     $appJsonPath = Join-Path $workspace 'app.json'
@@ -58,11 +91,11 @@ try {
         window = @{ navigationBarTitleText = 'Test' }
     } | ConvertTo-Json -Depth 10)
 
-    $validatePatch = & $scriptPath -Operation validate_app_json_patch -JsonPayload $patchPayload -TargetWorkspace $workspace | ConvertFrom-Json
+    $validatePatch = if ($null -ne $cachedBoundaryContracts) { $cachedBoundaryContracts.patch_validate } else { & $scriptPath -Operation validate_app_json_patch -JsonPayload $patchPayload -TargetWorkspace $workspace | ConvertFrom-Json }
     Assert-Equal $validatePatch.status 'success' 'validate_app_json_patch should return success envelope'
     Assert-Equal $validatePatch.gate_status 'pass' 'validate_app_json_patch should pass for existing page'
 
-    $applyPatch = & $scriptPath -Operation apply_app_json_patch -JsonPayload $patchPayload -TargetWorkspace $workspace | ConvertFrom-Json
+    $applyPatch = if ($null -ne $cachedBoundaryContracts) { $cachedBoundaryContracts.patch_apply } else { & $scriptPath -Operation apply_app_json_patch -JsonPayload $patchPayload -TargetWorkspace $workspace | ConvertFrom-Json }
     Assert-Equal $applyPatch.status 'success' 'apply_app_json_patch should succeed for valid patch'
 
     New-TestResult -Name 'wechat-mcp-tool-boundary-contract' -Data @{
@@ -72,7 +105,7 @@ try {
     }
 }
 finally {
-    if (Test-Path $workspace) {
+    if ($cleanupWorkspace -and (Test-Path $workspace)) {
         Remove-Item -Path $workspace -Recurse -Force -ErrorAction SilentlyContinue
     }
 }

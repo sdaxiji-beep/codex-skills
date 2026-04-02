@@ -33,3 +33,4 @@ Assert-Equal $issue.issue_type "text_encoding_garbled" "issue type should be tex
 
 Write-Host "[test] PASS: overlay detects encoding issue" -ForegroundColor Green
 exit 0
+

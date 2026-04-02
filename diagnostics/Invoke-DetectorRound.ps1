@@ -4,6 +4,7 @@
 . "$PSScriptRoot\Invoke-CompileHealthOverlay.ps1"
 . "$PSScriptRoot\Invoke-ConsoleErrorOverlay.ps1"
 . "$PSScriptRoot\Invoke-CollectConsoleLog.ps1"
+. "$PSScriptRoot\Write-DiagnosticsMetrics.ps1"
 
 function Invoke-DetectorRound {
   param(
@@ -91,6 +92,51 @@ function Invoke-DetectorRound {
   $decision = Invoke-DetectorDecision `
     -DetectorResult $detectorResult `
     -RepairConfidenceThreshold $RepairConfidenceThreshold
+
+  $issueTypeLabel = if ($detectorResult.issue -and $detectorResult.issue.issue_type) {
+    [string]$detectorResult.issue.issue_type
+  } else {
+    'passed'
+  }
+
+  $issueSourceLabel = if ($detectorResult.issue -and $detectorResult.issue.source) {
+    [string]$detectorResult.issue.source
+  } else {
+    'unknown'
+  }
+
+  $metrics = [pscustomobject]@{
+    source = 'detector_round'
+    page_path = $PagePath
+    project_path = $ProjectPath
+    preferred_detector = $PreferredDetector
+    collect_console_log = [bool]$CollectConsoleLog
+    enforce_page_recognition = [bool]$EnforcePageRecognition
+    detector_status = [string]$detectorResult.detector_status
+    detector_status_counts = @{
+      ([string]$detectorResult.detector_status) = 1
+    }
+    detectors_tried = @($detectorResult.detectors_tried)
+    issue_type_counts = @{
+      $issueTypeLabel = 1
+    }
+    issue_source_counts = @{
+      $issueSourceLabel = 1
+    }
+    decision_action_counts = @{
+      ([string]$decision.action) = 1
+    }
+    console_overlay_hit = [bool]($consoleIssue.status -ne 'passed')
+    compile_overlay_hit = [bool]($compileIssue.status -ne 'passed')
+    round_status = if ($decision.action -eq 'done') { 'passed' } else { 'needs_action' }
+    decision_action = [string]$decision.action
+    decision_reason = [string]$decision.reason
+    decision_confidence = $decision.confidence
+    issue_status = [string]$detectorResult.issue.status
+    timestamp = (Get-Date -Format "o")
+  }
+
+  Invoke-WriteDiagnosticsMetrics -Metrics $metrics | Out-Null
 
   return [PSCustomObject]@{
     detector_result = $detectorResult

@@ -4,20 +4,9 @@ param()
 . "$PSScriptRoot\wechat-get-port.ps1"
 . "$PSScriptRoot\wechat-open-project.ps1"
 . "$PSScriptRoot\wechat-deploy.ps1"
-. "$PSScriptRoot\wechat-release-setup.ps1"
 
 function Get-GeneratedProjectRoot {
     return (Join-Path (Split-Path $PSScriptRoot -Parent) 'generated')
-}
-
-function Write-Utf8NoBomFile {
-    param(
-        [Parameter(Mandatory)][string]$Path,
-        [Parameter(Mandatory)][string]$Content
-    )
-
-    $encoding = New-Object System.Text.UTF8Encoding($false)
-    [System.IO.File]::WriteAllText($Path, $Content, $encoding)
 }
 
 function Get-GeneratedProjectList {
@@ -37,8 +26,8 @@ function Get-GeneratedProjectList {
         Sort-Object LastWriteTime -Descending |
         ForEach-Object {
             [pscustomobject]@{
-                name            = $_.Name
-                project_dir     = $_.FullName
+                name           = $_.Name
+                project_dir    = $_.FullName
                 last_write_time = $_.LastWriteTime
             }
         })
@@ -86,10 +75,10 @@ function Get-GeneratedProjectMetadata {
     $spec = $null
 
     if (Test-Path $configPath) {
-        $config = Get-Content $configPath -Raw -Encoding UTF8 | ConvertFrom-Json
+        $config = Get-Content $configPath -Raw | ConvertFrom-Json
     }
     if (Test-Path $specPath) {
-        $spec = Get-Content $specPath -Raw -Encoding UTF8 | ConvertFrom-Json
+        $spec = Get-Content $specPath -Raw | ConvertFrom-Json
     }
 
     return [pscustomobject]@{
@@ -100,32 +89,6 @@ function Get-GeneratedProjectMetadata {
         prompt      = if ($spec -and $spec.task) { [string]$spec.task.title } else { '' }
         config_path = $configPath
     }
-}
-
-function Test-WechatGeneratedProjectCliFailure {
-    param(
-        [string]$RawOutput,
-        $ParsedOutput
-    )
-
-    $rawText = [string]$RawOutput
-    if (-not [string]::IsNullOrWhiteSpace($rawText)) {
-        if ($rawText -match '\[error\]') { return $true }
-        if ($rawText -match 'invalid appid') { return $true }
-        if ($rawText -match 'preview_failed') { return $true }
-        if ($rawText -match 'upload_failed') { return $true }
-    }
-
-    if ($null -ne $ParsedOutput) {
-        $parsedText = ($ParsedOutput | ConvertTo-Json -Depth 10 -Compress)
-        if ($parsedText -match '"error"\s*:') { return $true }
-        if ($parsedText -match '"errors"\s*:') { return $true }
-        if ($parsedText -match 'invalid appid') { return $true }
-        if ($parsedText -match 'preview_failed') { return $true }
-        if ($parsedText -match 'upload_failed') { return $true }
-    }
-
-    return $false
 }
 
 function Invoke-GeneratedProjectSetAppId {
@@ -156,13 +119,13 @@ function Invoke-GeneratedProjectSetAppId {
         }
     }
 
-    $config = Get-Content $configPath -Raw -Encoding UTF8 | ConvertFrom-Json
+    $config = Get-Content $configPath -Raw | ConvertFrom-Json
     $config.appid = $AppId
     if (-not [string]::IsNullOrWhiteSpace($ProjectName)) {
         $config.projectname = $ProjectName
     }
 
-    Write-Utf8NoBomFile -Path $configPath -Content ($config | ConvertTo-Json -Depth 10)
+    $config | ConvertTo-Json -Depth 10 | Set-Content $configPath -Encoding UTF8
     $updated = Get-GeneratedProjectMetadata -ProjectPath $resolvedProject
 
     return @{
@@ -209,10 +172,8 @@ function Invoke-GeneratedProjectPreview {
         '--port', [string]$port
     )
 
-    $previewFailed = (-not $result.success) -or (Test-WechatGeneratedProjectCliFailure -RawOutput $result.raw -ParsedOutput $result.parsed)
-
     return @{
-        status      = if ($previewFailed) { 'failed' } else { 'success' }
+        status      = if ($result.success) { 'success' } else { 'failed' }
         project_dir = $resolvedProject
         appid       = $metadata.appid
         template    = $metadata.template
@@ -254,6 +215,7 @@ function Invoke-GeneratedProjectUpload {
         [string]$ProjectPath = '',
         [string]$Version = '1.0.0',
         [string]$Desc = '',
+        [int]$Port = 0,
         [bool]$RequireConfirm = $true,
         [bool]$DryRun = $false
     )
@@ -284,8 +246,11 @@ function Invoke-GeneratedProjectUpload {
         }
     }
 
-    if ($DryRun) {
+    $port = $Port
+    if ($port -le 0) {
         $port = Get-WechatDevtoolsPort
+    }
+    if ($DryRun) {
         return @{
             status      = 'dry_run'
             project_dir = $resolvedProject
@@ -297,20 +262,6 @@ function Invoke-GeneratedProjectUpload {
         }
     }
 
-    $requirement = Resolve-WechatReleaseSetupRequirement -ActionName 'generated_upload' -AllowInteractiveSetup $RequireConfirm -WorkspaceRoot (Split-Path $PSScriptRoot -Parent)
-    if ($requirement.status -ne 'ready') {
-        return @{
-            status      = 'needs_release_setup'
-            reason      = 'local_real_deploy_config_required'
-            project_dir = $resolvedProject
-            appid       = $metadata.appid
-            template    = $metadata.template
-            readiness   = $requirement.readiness
-        }
-    }
-
-    $port = Get-WechatDevtoolsPort
-
     $result = Invoke-WechatCliCommand -Arguments @(
         'upload',
         '--project', $resolvedProject,
@@ -318,10 +269,8 @@ function Invoke-GeneratedProjectUpload {
         '--robot', '1'
     )
 
-    $uploadFailed = (-not $result.success) -or (Test-WechatGeneratedProjectCliFailure -RawOutput $result.raw -ParsedOutput $result.parsed)
-
     return @{
-        status      = if ($uploadFailed) { 'failed' } else { 'success' }
+        status      = if ($result.success) { 'success' } else { 'failed' }
         project_dir = $resolvedProject
         appid       = $metadata.appid
         template    = $metadata.template

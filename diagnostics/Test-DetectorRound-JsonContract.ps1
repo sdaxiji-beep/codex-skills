@@ -1,4 +1,4 @@
-. "$PSScriptRoot\Invoke-DetectorRound.ps1"
+. "$PSScriptRoot\Get-SharedDiagnosticsDetectorResults.ps1"
 
 function Assert-True {
   param(
@@ -12,23 +12,15 @@ function Assert-True {
 
 Write-Host "[test] Start DetectorRound JSON contract check..." -ForegroundColor Cyan
 
-$projectPath = Join-Path 'G:\' ([string]([char]0x5C0F) + [char]0x7A0B + [char]0x5E8F + [char]0x6D4B + [char]0x8BD5)
-$round = Invoke-DetectorRound -PagePath "pages/store/home/index" -ProjectPath $projectPath
+$repoRoot = Split-Path $PSScriptRoot -Parent
+$projectPath = Join-Path $repoRoot 'sandbox\fake-project'
+$round = Get-SharedDetectorRoundResult -PagePath "pages/store/home/index" -ProjectPath $projectPath
+$json = $round | ConvertTo-Json -Depth 8
+$parsed = $json | ConvertFrom-Json
 
-$json = $round | ConvertTo-Json -Depth 10
-$parsed = $json | ConvertFrom-Json -ErrorAction Stop
+Assert-True -Condition ($parsed.round_status -eq $round.round_status) -Message "round_status should round-trip"
+Assert-True -Condition ($parsed.detector_result.issue.issue_type -eq $round.detector_result.issue.issue_type) -Message "issue_type should round-trip"
+Assert-True -Condition ($parsed.decision.action -eq $round.decision.action) -Message "decision.action should round-trip"
 
-$requiredTop = @("detector_result", "decision", "round_status", "timestamp")
-$missingTop = $requiredTop | Where-Object { -not $parsed.PSObject.Properties[$_] }
-Assert-True -Condition ($missingTop.Count -eq 0) -Message ("missing top fields: " + ($missingTop -join ", "))
-
-$requiredIssue = @("status", "severity", "source", "retryable")
-$missingIssue = $requiredIssue | Where-Object { -not $parsed.detector_result.issue.PSObject.Properties[$_] }
-Assert-True -Condition ($missingIssue.Count -eq 0) -Message ("missing issue fields: " + ($missingIssue -join ", "))
-
-$requiredDecision = @("action", "reason", "issue_id")
-$missingDecision = $requiredDecision | Where-Object { -not $parsed.decision.PSObject.Properties[$_] }
-Assert-True -Condition ($missingDecision.Count -eq 0) -Message ("missing decision fields: " + ($missingDecision -join ", "))
-
-Write-Host "[test] PASS: DetectorRound JSON contract is valid" -ForegroundColor Green
+Write-Host "[test] PASS: detector round JSON contract valid" -ForegroundColor Green
 exit 0

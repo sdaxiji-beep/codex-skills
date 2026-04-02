@@ -12,6 +12,24 @@ function Invoke-ScreenshotCapture {
   $suffix = [guid]::NewGuid().ToString("N").Substring(0, 8)
   $outPath = Join-Path $OutputDir "$FilePrefix-$timestamp-$suffix.png"
 
+  $reuseWindowMs = 0
+  if (-not [string]::IsNullOrWhiteSpace($env:WECHAT_CAPTURE_REUSE_WINDOW_MS)) {
+    [void][int]::TryParse($env:WECHAT_CAPTURE_REUSE_WINDOW_MS, [ref]$reuseWindowMs)
+  }
+
+  if ($reuseWindowMs -gt 0) {
+    $latestCapture = Get-ChildItem -Path $OutputDir -Filter "$FilePrefix-*.png" -File -ErrorAction SilentlyContinue |
+      Sort-Object LastWriteTimeUtc -Descending |
+      Select-Object -First 1
+
+    if ($null -ne $latestCapture) {
+      $ageMs = [Math]::Round(((Get-Date).ToUniversalTime() - $latestCapture.LastWriteTimeUtc).TotalMilliseconds)
+      if ($ageMs -le $reuseWindowMs) {
+        return $latestCapture.FullName
+      }
+    }
+  }
+
   Add-Type @"
 using System;
 using System.Runtime.InteropServices;

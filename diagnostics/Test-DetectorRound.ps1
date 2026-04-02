@@ -1,4 +1,4 @@
-. "$PSScriptRoot\Invoke-DetectorRound.ps1"
+. "$PSScriptRoot\Get-SharedDiagnosticsDetectorResults.ps1"
 
 function Assert-True {
   param(
@@ -12,8 +12,9 @@ function Assert-True {
 
 Write-Host "[test] Start DetectorRound minimal check..." -ForegroundColor Cyan
 
-$projectPath = Join-Path 'G:\' ([string]([char]0x5C0F) + [char]0x7A0B + [char]0x5E8F + [char]0x6D4B + [char]0x8BD5)
-$round = Invoke-DetectorRound -PagePath "pages/store/home/index" -ProjectPath $projectPath
+$repoRoot = Split-Path $PSScriptRoot -Parent
+$projectPath = Join-Path $repoRoot 'sandbox\fake-project'
+$round = Get-SharedDetectorRoundResult -PagePath "pages/store/home/index" -ProjectPath $projectPath
 
 Write-Host "[test] round_status=$($round.round_status)"
 Write-Host "[test] detector_status=$($round.detector_result.detector_status)"

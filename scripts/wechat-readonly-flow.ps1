@@ -7,6 +7,7 @@ param(
 )
 
 . "$PSScriptRoot\wechat-get-port.ps1"
+. "$PSScriptRoot\wechat-automator-port.ps1"
 
 function Get-WechatCliPath {
     $candidate = Get-ChildItem -Path 'C:\Program Files (x86)\Tencent' -Filter 'cli.bat' -Recurse -ErrorAction SilentlyContinue |
@@ -15,7 +16,7 @@ function Get-WechatCliPath {
         return $candidate
     }
 
-    return 'C:\Program Files (x86)\Tencent\微信web开发者工具\cli.bat'
+    return 'C:\Program Files (x86)\Tencent\鐎甸偊鍠曟穱濡沞b鐎殿喒鍋撻柛娆愬灱閳ь剙鎳庢导鎰板礂缁屽儯li.bat'
 }
 
 function Get-WorkspaceRoot {
@@ -51,11 +52,23 @@ function Test-AutomatorPort {
 
 function Get-FreeAutomatorPort {
     param(
+        [string]$ProjectPath = '',
         [int]$PreferredPort = 9420,
         [int]$MaxScan = 50
     )
 
-    $candidatePorts = @($PreferredPort) + (($PreferredPort + 1)..($PreferredPort + $MaxScan))
+    $candidatePorts = Get-ProjectScopedAutomatorPortCandidates `
+        -ProjectPath $ProjectPath `
+        -BasePort $PreferredPort `
+        -PortSpan ([Math]::Max(8, [Math]::Min($MaxScan, 40))) `
+        -ExtraScan ([Math]::Max(0, $MaxScan - 40))
+
+    foreach ($candidate in $candidatePorts) {
+        if (Test-TcpPort -Port $candidate -TimeoutMs 250) {
+            return $candidate
+        }
+    }
+
     foreach ($candidate in $candidatePorts) {
         if (-not (Test-TcpPort -Port $candidate -TimeoutMs 250)) {
             return $candidate
@@ -140,7 +153,7 @@ function Ensure-AutomatorPort {
 
     if (Test-AutomatorPort -Port $AutoPort) {
         Write-Verbose "[AUTOMATOR] Port $AutoPort already available."
-        return
+        return $AutoPort
     }
 
     $cliPath = Get-WechatCliPath
@@ -193,7 +206,7 @@ function Get-AutomatorPageInfo {
     }
 
     if ($AutoPort -le 0) {
-        $AutoPort = Get-FreeAutomatorPort
+        $AutoPort = Get-FreeAutomatorPort -ProjectPath $ProjectPath
     }
 
     Write-Verbose "[AUTOMATOR] Ensuring automation port $AutoPort."
@@ -418,7 +431,9 @@ function New-FlowResult {
         [ValidateSet('ok', 'skipped', 'failed')]
         [string]$Variant,
         [pscustomobject]$PageInfo,
-        [string]$Source
+        [string]$Source,
+        [int]$ServicePort = 0,
+        [int]$AutomatorPort = 0
     )
 
     $variantContract = Get-VariantContract -Variant $Variant
@@ -442,6 +457,12 @@ function New-FlowResult {
     }
 
     $flow = Set-PageValidationSignature -FlowResult $flow -Source $Source
+    if ($ServicePort -gt 0) {
+        $flow.devtools_port = [int]$ServicePort
+    }
+    if ($AutomatorPort -gt 0) {
+        $flow.automator_port = [int]$AutomatorPort
+    }
     if ($PageInfo.PSObject.Properties.Name -contains 'data_keys' -and $null -ne $PageInfo.data_keys) {
         $flow.page_signature.page_data_keys = @($PageInfo.data_keys)
     }
@@ -505,7 +526,7 @@ function Invoke-FlowViaAutomator {
 
     try {
         $servicePort = Get-WechatDevtoolsPort
-        $automatorPort = Get-FreeAutomatorPort
+        $automatorPort = Get-FreeAutomatorPort -ProjectPath $ProjectPath
         Write-Verbose "[AUTOMATOR] Service port: $servicePort"
         Write-Verbose "[AUTOMATOR] Automator port: $automatorPort"
         $pageInfo = Get-AutomatorPageInfo -ProjectPath $ProjectPath -AutoPort $automatorPort
@@ -513,7 +534,12 @@ function Invoke-FlowViaAutomator {
             Write-Verbose "[AUTOMATOR] Page probe unavailable, fallback."
             return Invoke-Flow -Variant $Variant
         }
-        return (New-FlowResult -Variant $Variant -PageInfo $pageInfo -Source 'automator_current_page_v1')
+        return (New-FlowResult `
+            -Variant $Variant `
+            -PageInfo $pageInfo `
+            -Source 'automator_current_page_v1' `
+            -ServicePort $servicePort `
+            -AutomatorPort $automatorPort)
     }
     catch {
         Write-Verbose "[AUTOMATOR] Falling back to classic flow: $_"

@@ -9,8 +9,8 @@ Use this skill when the user wants to experiment safely without touching product
 
 ## Safe paths
 
-- `<repo-root>\sandbox\fake-project`
-- `<lab-workspace-root>`
+- `sandbox/fake-project`
+- repo-local scratch workspaces only
 
 ## Entry
 
@@ -35,5 +35,3 @@ powershell -ExecutionPolicy Bypass -File (Join-Path $RepoRoot "scripts\test-wech
 - Never write to production project code in lab mode.
 - Use guarded write helpers instead of raw writes.
 - Keep deploy actions out of lab requests unless explicitly requested.
-
-

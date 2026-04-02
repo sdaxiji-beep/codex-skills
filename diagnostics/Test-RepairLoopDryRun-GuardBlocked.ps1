@@ -12,6 +12,8 @@ function Assert-Equal {
 }
 
 Write-Host "[test] Start RepairLoopDryRun guard-blocked check..." -ForegroundColor Cyan
+$repoRoot = Split-Path $PSScriptRoot -Parent
+$projectPath = Join-Path $repoRoot 'sandbox\fake-project'
 
 function global:Invoke-DetectorRound {
   param([string]$PagePath, [string]$ProjectPath, [double]$RepairConfidenceThreshold)
@@ -51,7 +53,7 @@ function global:Invoke-RepairStub {
   }
 }
 
-$res = Invoke-RepairLoopDryRun -PagePath "pages/store/home/index" -ProjectPath "G:\mock" -MaxRounds 2
+$res = Invoke-RepairLoopDryRun -PagePath "pages/store/home/index" -ProjectPath $projectPath -MaxRounds 2
 
 Assert-Equal -Actual $res.stop_reason -Expected "guard_blocked" -Message "stop reason should be guard_blocked"
 Assert-Equal -Actual $res.completed_rounds -Expected 1 -Message "guard block should stop in first round"

@@ -1,10 +1,20 @@
 param([hashtable]$FlowResult, [hashtable]$Context)
 . "$PSScriptRoot\test-common.ps1"
 
+if ($null -eq $Context) {
+    $Context = @{}
+}
+
 $scriptPath = Join-Path $PSScriptRoot 'wechat-mcp-tool-boundary.ps1'
 Assert-True (Test-Path $scriptPath) 'wechat-mcp-tool-boundary.ps1 should exist'
 
-$describe = & $scriptPath -Operation describe_contract | ConvertFrom-Json
+if ($Context.ContainsKey('McpBoundaryDescribeContract')) {
+    $describe = $Context.McpBoundaryDescribeContract
+}
+else {
+    $describe = & $scriptPath -Operation describe_contract | ConvertFrom-Json
+    $Context.McpBoundaryDescribeContract = $describe
+}
 Assert-Equal $describe.status 'success' 'describe_contract should succeed'
 Assert-Equal $describe.interface_version 'mcp_tool_boundary_v1' 'describe_contract should expose interface version'
 Assert-True (@($describe.supported_operations).Count -ge 7) 'describe_contract should expose supported operations'
@@ -25,12 +35,13 @@ $workspace = Join-Path ([System.IO.Path]::GetTempPath()) ("mcp-boundary-failure-
 New-Item -ItemType Directory -Path $workspace -Force | Out-Null
 
 try {
-    $validate = & $scriptPath -Operation validate_page_bundle -JsonPayload $invalidPagePayload -TargetWorkspace $workspace | ConvertFrom-Json
+    $cachedBoundaryContracts = if ($Context.ContainsKey('McpBoundaryContracts')) { $Context.McpBoundaryContracts } else { $null }
+    $validate = if ($null -ne $cachedBoundaryContracts) { $cachedBoundaryContracts.failure_validate } else { & $scriptPath -Operation validate_page_bundle -JsonPayload $invalidPagePayload -TargetWorkspace $workspace | ConvertFrom-Json }
     Assert-Equal $validate.status 'success' 'validate_page_bundle should return envelope even when gate fails'
     Assert-Equal $validate.gate_status 'retryable_fail' 'validate_page_bundle should report retryable_fail for invalid payload'
     Assert-Equal $validate.interface_version 'mcp_tool_boundary_v1' 'validate result should include interface version'
 
-    $apply = & $scriptPath -Operation apply_page_bundle -JsonPayload $invalidPagePayload -TargetWorkspace $workspace | ConvertFrom-Json
+    $apply = if ($null -ne $cachedBoundaryContracts) { $cachedBoundaryContracts.failure_apply } else { & $scriptPath -Operation apply_page_bundle -JsonPayload $invalidPagePayload -TargetWorkspace $workspace | ConvertFrom-Json }
     Assert-Equal $apply.status 'failed' 'apply_page_bundle should fail for invalid payload'
     Assert-Equal $apply.exit_code 1 'apply_page_bundle should map retryable failures to exit_code=1'
     Assert-Equal $apply.gate_status 'retryable_fail' 'apply_page_bundle should expose mapped gate_status'

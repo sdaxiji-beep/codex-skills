@@ -1,0 +1,36 @@
+name: ci-diagnostics
+
+on:
+  push:
+    branches:
+      - master
+      - main
+      - 'codex/**'
+  pull_request:
+
+jobs:
+  diagnostics-focused:
+    runs-on: windows-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Scope note
+        shell: pwsh
+        run: Write-Host 'CI scope: diagnostics-focused only. Local Windows + WeChat DevTools validation remains required for fast/full and preview/deploy.'
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        shell: pwsh
+        run: npm install
+
+      - name: Run diagnostics-focused checks
+        shell: pwsh
+        run: powershell -ExecutionPolicy Bypass -File .\scripts\test-diagnostics-focused.ps1

@@ -1,11 +1,16 @@
 . "$PSScriptRoot\New-PageIssue.ps1"
+. "$PSScriptRoot\..\scripts\wechat-automator-port.ps1"
 
 function Invoke-AutomatorCheck {
   param(
     [string]$PagePath,
     [string]$ProjectPath,
-    [int]   $AutoPort = 9420
+    [int]   $AutoPort = 0
   )
+
+  if (-not $PSBoundParameters.ContainsKey('AutoPort') -or $AutoPort -le 0) {
+    $AutoPort = Get-ProjectScopedAutomatorPort -ProjectPath $ProjectPath
+  }
 
   Write-Host "[automator-check] start, port=$AutoPort"
 
@@ -14,7 +19,7 @@ function Invoke-AutomatorCheck {
   try {
     $tcp   = New-Object System.Net.Sockets.TcpClient
     $async = $tcp.BeginConnect("127.0.0.1", $AutoPort, $null, $null)
-    $ok    = $async.AsyncWaitHandle.WaitOne(3000)
+    $ok    = $async.AsyncWaitHandle.WaitOne(750)
     if ($ok -and $tcp.Connected) { $portOpen = $true }
     $tcp.Close()
   } catch { }

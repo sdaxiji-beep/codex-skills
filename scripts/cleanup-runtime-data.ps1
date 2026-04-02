@@ -1,55 +1,95 @@
 [CmdletBinding()]
 param(
-    [switch]$Apply
+    [switch]$Apply,
+    [string]$RepoRoot = (Split-Path $PSScriptRoot -Parent),
+    [int]$KeepArtifacts = 400,
+    [int]$KeepCaptures = 80,
+    [int]$KeepGeneratedProjects = 120
 )
 
-$repoRoot = Split-Path $PSScriptRoot -Parent
-$targets = @(
-    (Join-Path $repoRoot 'generated'),
-    (Join-Path $repoRoot 'artifacts')
-)
+$ErrorActionPreference = 'Stop'
 
-$summary = @()
-foreach ($target in $targets) {
-    if (-not (Test-Path $target)) {
-        $summary += [pscustomobject]@{
-            path = $target
+function Get-RetentionCandidates {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Path,
+        [Parameter(Mandatory = $true)]
+        [string]$ItemType,
+        [Parameter(Mandatory = $true)]
+        [int]$Keep
+    )
+
+    if (-not (Test-Path $Path)) {
+        return @{
+            path = $Path
+            item_type = $ItemType
             exists = $false
-            item_count = 0
-            removed = 0
-            mode = if ($Apply) { 'apply' } else { 'dry_run' }
-        }
-        continue
-    }
-
-    $items = @(Get-ChildItem $target -Force -ErrorAction SilentlyContinue)
-    $removed = 0
-    if ($Apply) {
-        foreach ($item in $items) {
-            if ($item.Name -eq '.gitkeep') { continue }
-            Remove-Item $item.FullName -Recurse -Force -ErrorAction SilentlyContinue
-            $removed++
+            total = 0
+            keep = $Keep
+            remove = @()
         }
     }
 
-    $summary += [pscustomobject]@{
-        path = $target
+    $items = switch ($ItemType) {
+        'file' { Get-ChildItem -Path $Path -File -Recurse | Sort-Object LastWriteTimeUtc -Descending }
+        'dir'  { Get-ChildItem -Path $Path -Directory | Sort-Object LastWriteTimeUtc -Descending }
+        default { throw "Unsupported item type: $ItemType" }
+    }
+
+    $remove = @($items | Select-Object -Skip $Keep)
+
+    return @{
+        path = $Path
+        item_type = $ItemType
         exists = $true
-        item_count = $items.Count
-        removed = $removed
-        mode = if ($Apply) { 'apply' } else { 'dry_run' }
+        total = @($items).Count
+        keep = $Keep
+        remove = $remove
     }
 }
 
-$result = [pscustomobject]@{
-    status = 'success'
+function Remove-RetentionItems {
+    param(
+        [Parameter(Mandatory = $true)]
+        [array]$Items
+    )
+
+    foreach ($item in $Items) {
+        if (Test-Path $item.FullName) {
+            Remove-Item -LiteralPath $item.FullName -Recurse -Force
+        }
+    }
+}
+
+$artifactPlan = Get-RetentionCandidates -Path (Join-Path $RepoRoot 'artifacts') -ItemType file -Keep $KeepArtifacts
+$capturePlan = Get-RetentionCandidates -Path (Join-Path $RepoRoot 'diagnostics\screenshot\captures') -ItemType file -Keep $KeepCaptures
+$generatedPlan = Get-RetentionCandidates -Path (Join-Path $RepoRoot 'generated') -ItemType dir -Keep $KeepGeneratedProjects
+
+$plans = @($artifactPlan, $capturePlan, $generatedPlan)
+$allCandidates = @(
+    @($artifactPlan.remove) +
+    @($capturePlan.remove) +
+    @($generatedPlan.remove)
+)
+
+if ($Apply) {
+    Remove-RetentionItems -Items $allCandidates
+}
+
+[pscustomobject]@{
+    test = 'cleanup-runtime-data'
     mode = if ($Apply) { 'apply' } else { 'dry_run' }
-    note = if ($Apply) {
-        'runtime folders cleaned'
-    } else {
-        'no files removed, rerun with -Apply to clean'
+    pass = $true
+    total_candidates = $allCandidates.Count
+    plans = $plans | ForEach-Object {
+        [pscustomobject]@{
+            path = $_.path
+            item_type = $_.item_type
+            exists = $_.exists
+            total = $_.total
+            keep = $_.keep
+            remove_count = @($_.remove).Count
+        }
     }
-    targets = $summary
 }
 
-$result | ConvertTo-Json -Depth 6

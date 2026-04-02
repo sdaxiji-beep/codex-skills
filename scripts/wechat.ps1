@@ -16,6 +16,7 @@ param()
 . "$PSScriptRoot\wechat-patch-app-json.ps1"
 . "$PSScriptRoot\wechat-doctor.ps1"
 . "$PSScriptRoot\wechat-bootstrap.ps1"
+. "$PSScriptRoot\get-diagnostics-metrics-summary.ps1"
 
 function Invoke-WechatReadonlyCheck {
     [CmdletBinding()]
@@ -58,6 +59,9 @@ function Get-WechatHelp {
 [Validation]
   Invoke-WechatBootstrap
   Invoke-WechatDoctor
+  Get-WechatValidationPlan
+  Get-WechatPublicApiSurface
+  Get-DiagnosticsMetricsSummary
   Invoke-FlowViaAutomator
   Invoke-AgenticLoop
   Invoke-WechatReadonlyCheck
@@ -105,6 +109,73 @@ function Get-WechatHelp {
   Note: write routes are blocked by default unless -AllowWriteRoute is provided.
 
 Use function name with -? to inspect parameters
+========================================
+"@
+}
+
+function Get-WechatValidationPlan {
+    Write-Host @"
+========================================
+ WeChat Validation Plan
+========================================
+
+[L0 - Syntax / Guard]
+  powershell -ExecutionPolicy Bypass -File .\scripts\test-wechat-skill.ps1 -GuardCheckOnly
+
+[L1 - Diagnostics Focused]
+  powershell -ExecutionPolicy Bypass -File .\scripts\test-diagnostics-focused.ps1
+
+[L2 - Fast Core Regression]
+  powershell -ExecutionPolicy Bypass -File .\scripts\test-wechat-skill.ps1 -SkipSmoke -Tag fast
+
+[L3 - Full Integration Regression]
+  powershell -ExecutionPolicy Bypass -File .\scripts\test-wechat-skill.ps1 -Tag full
+
+Notes:
+  - cached deploy/preview gate timing is not the same as full regression timing
+  - run fast and full sequentially, not in parallel
+  - see TEST_TIERS.md for detailed guidance and runtime expectations
+
+========================================
+"@
+}
+
+function Get-WechatPublicApiSurface {
+    Write-Host @"
+========================================
+ WeChat Public API Surface
+========================================
+
+[Human/operator public entrypoint]
+  scripts\wechat.ps1
+
+[External client boundary]
+  scripts\wechat-mcp-tool-boundary.ps1
+
+[Diagnostics operator entrypoint]
+  diagnostics\Invoke-RepairLoopAuto.ps1
+
+[Public docs]
+  README.md
+  CLAUDE.md
+  MCP_BOUNDARY_CONTRACT.md
+  EXTERNAL_CLIENT_ENTRYPOINTS.md
+  TEST_TIERS.md
+  RUNTIME_RETENTION_POLICY.md
+  RELEASE_PACKAGE.md
+  PUBLIC_API_SURFACE.md
+
+[Public skills]
+  .agents\skills\wechat-devtools-control
+  .agents\skills\wechat-release-guard
+  .agents\skills\wechat-spec-executor
+  .agents\skills\wechat-lab-builder
+
+Notes:
+  - test-* scripts are not public API
+  - most generation-gate/apply scripts are internal implementation
+  - see PUBLIC_API_SURFACE.md for the full classification
+
 ========================================
 "@
 }

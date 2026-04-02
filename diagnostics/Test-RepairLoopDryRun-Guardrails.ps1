@@ -12,6 +12,8 @@ function Assert-Equal {
 }
 
 Write-Host "[test] Start RepairLoopDryRun guardrail checks..." -ForegroundColor Cyan
+$repoRoot = Split-Path $PSScriptRoot -Parent
+$projectPath = Join-Path $repoRoot 'sandbox\fake-project'
 
 # Case 1: duplicate issue should stop on second round.
 function global:Invoke-DetectorRound {
@@ -39,7 +41,7 @@ function global:Invoke-DetectorRound {
   }
 }
 
-$dup = Invoke-RepairLoopDryRun -PagePath "pages/store/home/index" -ProjectPath "G:\mock" -MaxRounds 3 -StopOnDuplicateIssue $true
+$dup = Invoke-RepairLoopDryRun -PagePath "pages/store/home/index" -ProjectPath $projectPath -MaxRounds 3 -StopOnDuplicateIssue $true
 Assert-Equal -Actual $dup.stop_reason -Expected "duplicate_issue_stopped" -Message "duplicate issue stop reason"
 Assert-Equal -Actual $dup.completed_rounds -Expected 2 -Message "duplicate issue should stop on round 2"
 
@@ -72,7 +74,7 @@ function global:Invoke-DetectorRound {
   }
 }
 
-$max = Invoke-RepairLoopDryRun -PagePath "pages/store/home/index" -ProjectPath "G:\mock" -MaxRounds 2 -StopOnDuplicateIssue $false
+$max = Invoke-RepairLoopDryRun -PagePath "pages/store/home/index" -ProjectPath $projectPath -MaxRounds 2 -StopOnDuplicateIssue $false
 Assert-Equal -Actual $max.stop_reason -Expected "max_rounds_reached" -Message "max rounds stop reason"
 Assert-Equal -Actual $max.completed_rounds -Expected 2 -Message "max rounds should finish exactly MaxRounds"
 
