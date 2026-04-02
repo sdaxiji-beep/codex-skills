@@ -1,0 +1,60 @@
+{
+  "task": {
+    "id": "task-203-sandbox-modify-rollback",
+    "title": "Sandbox modify app.js marker then rollback",
+    "type": "feature"
+  },
+  "target": {
+    "files": [
+      {
+        "path": "sandbox\\fake-project\\app.js",
+        "action": "modify"
+      }
+    ],
+    "new_content": "// fake project\n// dispatcher-rollback-marker-v1",
+    "deploy": {
+      "type": "none",
+      "functions": [],
+      "version": "1.0.0"
+    }
+  },
+  "requirements": {
+    "description": "Modify sandbox app.js with a marker and rollback it in validation command.",
+    "acceptance": [
+      "marker appears after write step",
+      "validation command rolls app.js back to baseline",
+      "command exits 0 only when rollback is confirmed"
+    ],
+    "constraints": [
+      "sandbox only",
+      "no deployment"
+    ]
+  },
+  "validation": {
+    "layer": 0,
+    "command": "$p='.\\sandbox\\fake-project\\app.js'; $m='dispatcher-rollback-marker-v1'; $raw=Get-Content $p -Raw; $has=($raw -match $m); Set-Content -Path $p -Value '// fake project' -Encoding UTF8; $rolled=-not ((Get-Content $p -Raw) -match $m); if($has -and $rolled){ exit 0 } else { exit 1 }",
+    "required_tests": []
+  },
+  "record": {
+    "enabled": true,
+    "output_path": "artifacts\\records",
+    "fields": [
+      "task_id",
+      "title",
+      "status",
+      "elapsed_s",
+      "validated",
+      "deployed",
+      "changes",
+      "timestamp"
+    ]
+  },
+  "rollback": {
+    "on_validate_fail": "restore_target_files",
+    "on_deploy_fail": "notify_only",
+    "on_write_fail": "abort"
+  },
+  "auto_mode": true,
+  "auto_write": true,
+  "auto_deploy": true
+}

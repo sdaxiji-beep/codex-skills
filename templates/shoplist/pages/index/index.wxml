@@ -1,0 +1,14 @@
+<view class="container">
+  <view class="header">
+    <text class="title">商品列表</text>
+  </view>
+
+  <view class="grid">
+    <view wx:for="{{products}}" wx:key="id" class="card">
+      <view class="thumb"></view>
+      <text class="name">{{item.name}}</text>
+      <text class="price">¥ {{item.price}}</text>
+      <button class="buy-btn" data-id="{{item.id}}" bindtap="buyNow">立即购买</button>
+    </view>
+  </view>
+</view>

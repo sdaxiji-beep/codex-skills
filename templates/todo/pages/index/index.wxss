@@ -1,0 +1,11 @@
+.container { padding: 24rpx; }
+.header { margin-bottom: 20rpx; }
+.title { font-size: 36rpx; font-weight: bold; }
+.composer { display: flex; gap: 12rpx; margin-bottom: 20rpx; }
+.input { flex: 1; border: 1rpx solid #ddd; border-radius: 10rpx; padding: 14rpx; }
+.add-btn { background: #1677ff; color: #fff; font-size: 28rpx; }
+.item { display: flex; align-items: center; gap: 12rpx; background: #fff; border-radius: 10rpx; padding: 16rpx; margin-bottom: 12rpx; }
+.text { flex: 1; font-size: 28rpx; }
+.text.done { color: #999; text-decoration: line-through; }
+.remove { color: #e64340; font-size: 26rpx; }
+.empty { color: #999; text-align: center; margin-top: 80rpx; }

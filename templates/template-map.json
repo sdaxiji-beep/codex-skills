@@ -1,0 +1,17 @@
+{
+  "default": "notebook",
+  "templates": [
+    {
+      "name": "notebook",
+      "keywords": ["记事", "笔记", "note", "notebook"]
+    },
+    {
+      "name": "todo",
+      "keywords": ["待办", "清单", "todo", "task"]
+    },
+    {
+      "name": "shoplist",
+      "keywords": ["商品", "列表", "shop", "catalog"]
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+artifacts/
+generated/
+node_modules/
+keys/
+config/local-release.config.json
+deploy-config.json
+restored-*/

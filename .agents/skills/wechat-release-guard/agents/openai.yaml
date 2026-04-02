@@ -1,0 +1,5 @@
+interface:
+  display_name: "WeChat Release Guard"
+  short_description: "Guarded preview/upload/cloud deploy workflow with mandatory validation and confirmation."
+  default_prompt: "Use $wechat-release-guard to run a guarded WeChat release flow with validation, confirmation, and result verification."
+

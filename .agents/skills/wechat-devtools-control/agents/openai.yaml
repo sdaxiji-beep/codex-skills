@@ -1,0 +1,5 @@
+interface:
+  display_name: "WeChat DevTools Control"
+  short_description: "Bootstrap, doctor, create, preview, and guarded generated-project operations for WeChat DevTools."
+  default_prompt: "Use $wechat-devtools-control to bootstrap this repo and create a WeChat mini program from a natural-language prompt."
+
