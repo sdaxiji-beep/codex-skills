@@ -1,4 +1,0 @@
-interface:
-  display_name: "WeChat Global Config Modifier"
-  short_description: "Append real generated page routes into app.json through a validated append_pages patch."
-  default_prompt: "Use $wechat-global-config-modifier to register generated WeChat Mini Program pages in app.json through the append_pages patch flow in this repo."

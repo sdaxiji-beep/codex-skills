@@ -63,3 +63,10 @@ function New-TestResult {
 
     return [pscustomobject]($Data + @{ test = $Name })
 }
+
+if (-not ($global:WechatMcpBoundaryCache -is [hashtable])) {
+    $global:WechatMcpBoundaryCache = @{}
+}
+
+. "$PSScriptRoot\Get-SharedP3OperationalFixtures.ps1"
+. "$PSScriptRoot\Write-AtomicJsonCache.ps1"

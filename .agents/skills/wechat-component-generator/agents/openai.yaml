@@ -1,4 +1,0 @@
-interface:
-  display_name: "WeChat Component Generator"
-  short_description: "Generate a single WeChat Mini Program custom component as a JSON bundle and apply it through the component gate."
-  default_prompt: "Use $wechat-component-generator to implement a single WeChat Mini Program custom component from a component-generation spec in this repo."

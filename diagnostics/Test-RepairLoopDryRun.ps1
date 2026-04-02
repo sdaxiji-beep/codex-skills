@@ -1,4 +1,4 @@
-. "$PSScriptRoot\Invoke-RepairLoopDryRun.ps1"
+. "$PSScriptRoot\Get-SharedDiagnosticsDetectorResults.ps1"
 
 function Assert-True {
   param(
@@ -12,8 +12,9 @@ function Assert-True {
 
 Write-Host "[test] Start RepairLoopDryRun minimal check..." -ForegroundColor Cyan
 
-$projectPath = Join-Path 'G:\' ([string]([char]0x5C0F) + [char]0x7A0B + [char]0x5E8F + [char]0x6D4B + [char]0x8BD5)
-$res = Invoke-RepairLoopDryRun -PagePath "pages/store/home/index" -ProjectPath $projectPath -MaxRounds 1
+$repoRoot = Split-Path $PSScriptRoot -Parent
+$projectPath = Join-Path $repoRoot 'sandbox\fake-project'
+$res = Get-SharedRepairLoopDryRunResult -PagePath "pages/store/home/index" -ProjectPath $projectPath -MaxRounds 1
 
 Write-Host "[test] mode=$($res.mode)"
 Write-Host "[test] completed_rounds=$($res.completed_rounds)"

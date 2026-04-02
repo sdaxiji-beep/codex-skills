@@ -1,6 +1,7 @@
 # WeChat DevTools Control
 
 This project turns natural-language requests into runnable WeChat mini program projects with guarded preview/deploy workflows.
+Examples in this README use repo-relative paths so they work from any clone.
 
 ## What this is
 
@@ -63,6 +64,103 @@ From an external client point of view, the minimum path is:
 - Runtime doctor: check DevTools port/API, CLI path, and generated workspace health
 - Generated project operations: list/open/preview/deploy guard/appid switch/upload dry-run
 - Validation gates: `fast` and `full`
+
+## Validation tiers
+
+The repo now has multiple validation layers, and they should not be confused:
+
+- `GuardCheckOnly`: syntax and guard surface
+- `test-diagnostics-focused.ps1`: diagnostics/detect/repair contracts
+- `fast`: core local regression
+- `full`: broader integration regression
+
+GitHub CI currently covers only the repo-safe guard and diagnostics-focused layers.
+Local Windows + WeChat DevTools validation is still required for the higher tiers and for any real preview/deploy confirmation.
+
+GitHub PR checks:
+
+- `GuardCheckOnly`
+- `test-diagnostics-focused.ps1`
+
+Recommended repository ruleset / required checks:
+
+- `ci-minimal / guardrails`
+- `ci-diagnostics / diagnostics-focused`
+
+Local-only validation:
+
+- `fast`
+- `full`
+- real DevTools preview/deploy drills
+
+## Local vs CI
+
+| Check | GitHub CI | Local Windows + DevTools |
+| --- | --- | --- |
+| `GuardCheckOnly` | Yes | Yes |
+| `test-diagnostics-focused.ps1` | Yes | Yes |
+| `fast` | No | Yes |
+| `full` | No | Yes |
+| Real preview / deploy drills | No | Yes |
+| Release candidate gating | Public-safe only | Required |
+
+Required local validation for release candidates remains `fast`, `full`, and real preview/deploy drills on a Windows + WeChat DevTools machine.
+This matrix is a sharing guide, not a contract change; the stable boundary remains the documented scripts and operations.
+Public examples in this README stay repo-relative so shared guidance does not depend on a local machine path.
+
+Important:
+
+- the cached deploy/preview gate can become very fast after the first run
+- that cache behavior does **not** mean the whole `full` regression will become a 20-second run
+
+See [TEST_TIERS.md](TEST_TIERS.md) for the exact commands, usage rules, and runtime expectations.
+
+## Runtime retention
+
+Runtime outputs are intentionally treated as disposable local state:
+
+- `artifacts/`
+- `generated/`
+- `diagnostics/screenshot/captures/`
+
+Use the retention-safe cleanup command:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File ".\scripts\cleanup-runtime-data.ps1"
+```
+
+See [RUNTIME_RETENTION_POLICY.md](RUNTIME_RETENTION_POLICY.md) for keep-count rules and cleanup behavior.
+
+## Public API surface
+
+The repo contains many internal scripts, but only a smaller set is intended as stable public surface.
+
+See [PUBLIC_API_SURFACE.md](PUBLIC_API_SURFACE.md) for:
+
+- human/operator entrypoints
+- external client boundary entrypoints
+- public docs and skills
+- internal implementation vs test-only files
+
+## P3 distribution readiness
+
+P3 keeps the public surface clone-agnostic and repository-relative while preparing the repo for broader consumption.
+
+Current public-safe distribution metadata:
+
+- `package.json` advertises the MCP package name through `mcpName`
+- `server.json` is the repo-root distribution metadata summary
+- `MCP_CLIENT_USAGE.md` and `MCP_INSPECTOR_QUICKSTART.md` describe the repo-relative consumer path
+- `MCP_REGISTRY_READINESS.md` documents the public-safe installer and registry readiness rules
+- `wechat://installer-readiness` is the public, read-only hint for installer-facing registration guidance
+
+This metadata is additive and does not change the stable validate/apply contract surface.
+
+Next P3 step:
+
+- installer-facing publish path and registry-readiness hints, still repo-relative and machine-neutral
+- keep the local-vs-CI boundary explicit so GitHub-hosted checks stay public-safe while local DevTools checks remain required
+- keep the recommended GitHub required checks limited to `ci-minimal / guardrails` and `ci-diagnostics / diagnostics-focused`; keep `fast` and `full` as local-only release-candidate validation
 
 ## Current baseline
 
@@ -146,6 +244,7 @@ Current Stage 2A intent is comparison and telemetry only. Shadow diagnostics do 
 Validation note:
 
 - run `fast` and `full` sequentially (not in parallel) to avoid write-guard test interference.
+- use `TEST_TIERS.md` to choose the right tier instead of treating cached deploy-gate timing as full-regression timing.
 
 ## Stage 2B hybrid mode
 

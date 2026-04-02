@@ -5,7 +5,6 @@ param(
 )
 
 . "$PSScriptRoot\wechat-get-port.ps1"
-. "$PSScriptRoot\wechat-release-setup.ps1"
 
 function Test-WechatCliPath {
     [CmdletBinding()]
@@ -13,20 +12,8 @@ function Test-WechatCliPath {
 
     $candidates = @(
         'C:\Program Files (x86)\Tencent\微信web开发者工具\cli.bat',
-        'C:\Program Files (x86)\Tencent\微信开发者工具\cli.bat',
-        'C:\Program Files (x86)\Tencent\微信web开发者工具\cli.bat',
         'C:\Program Files (x86)\Tencent\微信开发者工具\cli.bat'
     )
-    $scanRoot = 'C:\Program Files (x86)\Tencent'
-    if (Test-Path $scanRoot) {
-        @(Get-ChildItem $scanRoot -Recurse -Filter 'cli.bat' -ErrorAction SilentlyContinue |
-            Select-Object -ExpandProperty FullName) | ForEach-Object {
-            if ($candidates -notcontains $_) {
-                $candidates += $_
-            }
-        }
-    }
-
     foreach ($candidate in $candidates) {
         if (Test-Path $candidate) {
             return @{
@@ -81,7 +68,6 @@ function Invoke-WechatDoctor {
     $cliCheck = Test-WechatCliPath
     $generatedRoot = Join-Path (Split-Path $PSScriptRoot -Parent) 'generated'
     $generatedCount = if (Test-Path $generatedRoot) { @(Get-ChildItem $generatedRoot -Directory).Count } else { 0 }
-    $releaseReadiness = Get-WechatReleaseReadiness -WorkspaceRoot (Split-Path $PSScriptRoot -Parent)
 
     $checks = @(
         @{
@@ -103,11 +89,6 @@ function Invoke-WechatDoctor {
             name   = 'generated_root_exists'
             ok     = (Test-Path $generatedRoot)
             detail = "root=$generatedRoot count=$generatedCount"
-        },
-        @{
-            name   = 'release_setup_ready'
-            ok     = [bool]$releaseReadiness.ready
-            detail = if ($releaseReadiness.ready) { "appid=$($releaseReadiness.appid)" } else { "local_config=$($releaseReadiness.local_config_exists) appid_ok=$($releaseReadiness.appid_ok) key_ok=$($releaseReadiness.private_key_exists) project_ok=$($releaseReadiness.project_path_exists)" }
         }
     )
 
@@ -127,7 +108,6 @@ function Invoke-WechatDoctor {
             passed_checks = @($checks | Where-Object { $_.ok }).Count
             failed_checks = @($checks | Where-Object { -not $_.ok }).Count
         }
-        release_setup          = $releaseReadiness
     }
 
     if (-not $SimulateWriteFailure) {

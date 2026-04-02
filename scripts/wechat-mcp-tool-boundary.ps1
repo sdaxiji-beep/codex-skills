@@ -14,9 +14,13 @@ param(
     [string]$Operation,
 
     [string]$JsonPayload,
-    [string]$JsonFilePath,
-    [string]$TargetWorkspace = (Get-Location).Path
+[string]$JsonFilePath,
+[string]$TargetWorkspace = (Get-Location).Path
 )
+
+if (-not ($global:WechatMcpBoundaryCache -is [hashtable])) {
+    $global:WechatMcpBoundaryCache = @{}
+}
 
 function Get-BoundaryPayload {
     param(
@@ -49,6 +53,59 @@ function New-BoundaryResult {
         status = $Status
         operation = $OperationName
     })
+}
+
+function Get-BoundaryPayloadFingerprint {
+    param(
+        [string]$Payload,
+        [string]$PayloadPath
+    )
+
+    if ([string]::IsNullOrWhiteSpace($Payload) -and -not [string]::IsNullOrWhiteSpace($PayloadPath) -and (Test-Path $PayloadPath)) {
+        $Payload = Get-Content -Path $PayloadPath -Raw -Encoding UTF8
+    }
+
+    $sha = [System.Security.Cryptography.SHA256]::Create()
+    try {
+        $bytes = [System.Text.Encoding]::UTF8.GetBytes([string]$Payload)
+        $hash = $sha.ComputeHash($bytes)
+        return ([System.BitConverter]::ToString($hash) -replace '-', '').ToLowerInvariant()
+    }
+    finally {
+        $sha.Dispose()
+    }
+}
+
+function Get-BoundaryCacheKey {
+    param(
+        [Parameter(Mandatory)][string]$OperationName,
+        [string]$PayloadFingerprint = '',
+        [string]$Workspace = ''
+    )
+
+    return ('{0}|{1}|{2}' -f $OperationName, $Workspace, $PayloadFingerprint)
+}
+
+function Get-BoundaryCachedResult {
+    param(
+        [Parameter(Mandatory)][string]$CacheKey
+    )
+
+    if ($global:WechatMcpBoundaryCache.ContainsKey($CacheKey)) {
+        return $global:WechatMcpBoundaryCache[$CacheKey]
+    }
+
+    return $null
+}
+
+function Set-BoundaryCachedResult {
+    param(
+        [Parameter(Mandatory)][string]$CacheKey,
+        [Parameter(Mandatory)]$Result
+    )
+
+    $global:WechatMcpBoundaryCache[$CacheKey] = $Result
+    return $Result
 }
 
 function Get-ApplyGateStatusFromExitCode {
@@ -103,6 +160,13 @@ function Invoke-ApplyScriptProcess {
 try {
     switch ($Operation) {
         'describe_contract' {
+            $cacheKey = Get-BoundaryCacheKey -OperationName $Operation
+            $cached = Get-BoundaryCachedResult -CacheKey $cacheKey
+            if ($null -ne $cached) {
+                $cached | ConvertTo-Json -Depth 20
+                exit 0
+            }
+
             $result = New-BoundaryResult -Status 'success' -OperationName $Operation -Data @{
                 interface_version = 'mcp_tool_boundary_v1'
                 supported_operations = @(
@@ -121,10 +185,17 @@ try {
                     '2' = 'hard_fail'
                 }
             }
-            $result | ConvertTo-Json -Depth 20
+            Set-BoundaryCachedResult -CacheKey $cacheKey -Result $result | ConvertTo-Json -Depth 20
             exit 0
         }
         'describe_execution_profile' {
+            $cacheKey = Get-BoundaryCacheKey -OperationName $Operation
+            $cached = Get-BoundaryCachedResult -CacheKey $cacheKey
+            if ($null -ne $cached) {
+                $cached | ConvertTo-Json -Depth 20
+                exit 0
+            }
+
             $result = New-BoundaryResult -Status 'success' -OperationName $Operation -Data @{
                 interface_version = 'mcp_tool_boundary_v1'
                 platform = @{
@@ -159,11 +230,17 @@ try {
                     fallback_when = 'boundary status=error; inspect message and fix input contract'
                 }
             }
-            $result | ConvertTo-Json -Depth 20
+            Set-BoundaryCachedResult -CacheKey $cacheKey -Result $result | ConvertTo-Json -Depth 20
             exit 0
         }
         'validate_page_bundle' {
             $payload = Get-BoundaryPayload -Payload $JsonPayload -PayloadPath $JsonFilePath
+            $cacheKey = Get-BoundaryCacheKey -OperationName $Operation -Workspace $TargetWorkspace -PayloadFingerprint (Get-BoundaryPayloadFingerprint -Payload $payload -PayloadPath $JsonFilePath)
+            $cached = Get-BoundaryCachedResult -CacheKey $cacheKey
+            if ($null -ne $cached) {
+                $cached | ConvertTo-Json -Depth 20
+                exit 0
+            }
             . (Join-Path $PSScriptRoot 'generation-gate-v1.ps1')
             $gate = Invoke-GenerationGateV1 -JsonPayload $payload -TargetWorkspace $TargetWorkspace
             $result = New-BoundaryResult -Status 'success' -OperationName $Operation -Data @{
@@ -171,11 +248,17 @@ try {
                 gate_status = $gate.Status
                 errors = @($gate.Errors)
             }
-            $result | ConvertTo-Json -Depth 20
+            Set-BoundaryCachedResult -CacheKey $cacheKey -Result $result | ConvertTo-Json -Depth 20
             exit 0
         }
         'validate_component_bundle' {
             $payload = Get-BoundaryPayload -Payload $JsonPayload -PayloadPath $JsonFilePath
+            $cacheKey = Get-BoundaryCacheKey -OperationName $Operation -Workspace $TargetWorkspace -PayloadFingerprint (Get-BoundaryPayloadFingerprint -Payload $payload -PayloadPath $JsonFilePath)
+            $cached = Get-BoundaryCachedResult -CacheKey $cacheKey
+            if ($null -ne $cached) {
+                $cached | ConvertTo-Json -Depth 20
+                exit 0
+            }
             . (Join-Path $PSScriptRoot 'generation-gate-component-v1.ps1')
             $gate = Invoke-GenerationGateComponentV1 -JsonPayload $payload
             $result = New-BoundaryResult -Status 'success' -OperationName $Operation -Data @{
@@ -183,11 +266,17 @@ try {
                 gate_status = $gate.Status
                 errors = @($gate.Errors)
             }
-            $result | ConvertTo-Json -Depth 20
+            Set-BoundaryCachedResult -CacheKey $cacheKey -Result $result | ConvertTo-Json -Depth 20
             exit 0
         }
         'validate_app_json_patch' {
             $payload = Get-BoundaryPayload -Payload $JsonPayload -PayloadPath $JsonFilePath
+            $cacheKey = Get-BoundaryCacheKey -OperationName $Operation -Workspace $TargetWorkspace -PayloadFingerprint (Get-BoundaryPayloadFingerprint -Payload $payload -PayloadPath $JsonFilePath)
+            $cached = Get-BoundaryCachedResult -CacheKey $cacheKey
+            if ($null -ne $cached) {
+                $cached | ConvertTo-Json -Depth 20
+                exit 0
+            }
             . (Join-Path $PSScriptRoot 'generation-gate-app-json-v1.ps1')
             $gate = Invoke-GenerationGateAppJsonV1 -JsonPayload $payload -TargetWorkspace $TargetWorkspace
             $result = New-BoundaryResult -Status 'success' -OperationName $Operation -Data @{
@@ -195,11 +284,17 @@ try {
                 gate_status = $gate.Status
                 errors = @($gate.Errors)
             }
-            $result | ConvertTo-Json -Depth 20
+            Set-BoundaryCachedResult -CacheKey $cacheKey -Result $result | ConvertTo-Json -Depth 20
             exit 0
         }
         'apply_page_bundle' {
             $payload = Get-BoundaryPayload -Payload $JsonPayload -PayloadPath $JsonFilePath
+            $cacheKey = Get-BoundaryCacheKey -OperationName $Operation -Workspace $TargetWorkspace -PayloadFingerprint (Get-BoundaryPayloadFingerprint -Payload $payload -PayloadPath $JsonFilePath)
+            $cached = Get-BoundaryCachedResult -CacheKey $cacheKey
+            if ($null -ne $cached) {
+                $cached | ConvertTo-Json -Depth 20
+                exit 0
+            }
             $apply = Invoke-ApplyScriptProcess -ScriptPath (Join-Path $PSScriptRoot 'wechat-apply-bundle.ps1') -Payload $payload -WorkspacePath $TargetWorkspace
             $status = if ($apply.exit_code -eq 0) { 'success' } else { 'failed' }
             $result = New-BoundaryResult -Status $status -OperationName $Operation -Data @{
@@ -209,11 +304,17 @@ try {
                 stdout = $apply.stdout
                 stderr = $apply.stderr
             }
-            $result | ConvertTo-Json -Depth 20
+            Set-BoundaryCachedResult -CacheKey $cacheKey -Result $result | ConvertTo-Json -Depth 20
             exit 0
         }
         'apply_component_bundle' {
             $payload = Get-BoundaryPayload -Payload $JsonPayload -PayloadPath $JsonFilePath
+            $cacheKey = Get-BoundaryCacheKey -OperationName $Operation -Workspace $TargetWorkspace -PayloadFingerprint (Get-BoundaryPayloadFingerprint -Payload $payload -PayloadPath $JsonFilePath)
+            $cached = Get-BoundaryCachedResult -CacheKey $cacheKey
+            if ($null -ne $cached) {
+                $cached | ConvertTo-Json -Depth 20
+                exit 0
+            }
             $apply = Invoke-ApplyScriptProcess -ScriptPath (Join-Path $PSScriptRoot 'wechat-apply-component-bundle.ps1') -Payload $payload -WorkspacePath $TargetWorkspace
             $status = if ($apply.exit_code -eq 0) { 'success' } else { 'failed' }
             $result = New-BoundaryResult -Status $status -OperationName $Operation -Data @{
@@ -223,11 +324,17 @@ try {
                 stdout = $apply.stdout
                 stderr = $apply.stderr
             }
-            $result | ConvertTo-Json -Depth 20
+            Set-BoundaryCachedResult -CacheKey $cacheKey -Result $result | ConvertTo-Json -Depth 20
             exit 0
         }
         'apply_app_json_patch' {
             $payload = Get-BoundaryPayload -Payload $JsonPayload -PayloadPath $JsonFilePath
+            $cacheKey = Get-BoundaryCacheKey -OperationName $Operation -Workspace $TargetWorkspace -PayloadFingerprint (Get-BoundaryPayloadFingerprint -Payload $payload -PayloadPath $JsonFilePath)
+            $cached = Get-BoundaryCachedResult -CacheKey $cacheKey
+            if ($null -ne $cached) {
+                $cached | ConvertTo-Json -Depth 20
+                exit 0
+            }
             $apply = Invoke-ApplyScriptProcess -ScriptPath (Join-Path $PSScriptRoot 'wechat-apply-app-json-patch.ps1') -Payload $payload -WorkspacePath $TargetWorkspace
             $status = if ($apply.exit_code -eq 0) { 'success' } else { 'failed' }
             $result = New-BoundaryResult -Status $status -OperationName $Operation -Data @{
@@ -237,7 +344,7 @@ try {
                 stdout = $apply.stdout
                 stderr = $apply.stderr
             }
-            $result | ConvertTo-Json -Depth 20
+            Set-BoundaryCachedResult -CacheKey $cacheKey -Result $result | ConvertTo-Json -Depth 20
             exit 0
         }
     }

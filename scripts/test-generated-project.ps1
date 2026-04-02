@@ -3,9 +3,17 @@ param([hashtable]$FlowResult, [hashtable]$Context)
 . "$PSScriptRoot\wechat-build-from-prompt.ps1"
 . "$PSScriptRoot\wechat-generated-project.ps1"
 
-$built = Invoke-WechatBuildFromPrompt `
-  -Prompt "build a notebook mini program" `
-  -AutoPreview $false
+if ($null -eq $Context) {
+  $Context = @{}
+}
+
+if (-not $Context.ContainsKey('GeneratedNotebookProject')) {
+  $Context.GeneratedNotebookProject = Invoke-WechatBuildFromPrompt `
+    -Prompt "build a notebook mini program" `
+    -AutoPreview $false
+}
+
+$built = $Context.GeneratedNotebookProject
 
 $projects = @(Get-GeneratedProjectList)
 Assert-True ($projects.Count -gt 0) "generated project list should not be empty"

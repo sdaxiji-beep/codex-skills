@@ -1,5 +1,6 @@
 . "$PSScriptRoot\Invoke-DetectorRound.ps1"
 . "$PSScriptRoot\Invoke-RepairActionExecutor.ps1"
+. "$PSScriptRoot\Write-DiagnosticsMetrics.ps1"
 
 function Invoke-RepairLoopAuto {
   param(
@@ -20,6 +21,27 @@ function Invoke-RepairLoopAuto {
   $history = @()
   $finalStatus = "failed"
   $finalReason = "max_rounds_reached"
+  $detectorStatusCounts = @{}
+  $issueTypeCounts = @{}
+  $issueSourceCounts = @{}
+  $decisionActionCounts = @{}
+  $repairStatusCounts = @{}
+  $repairAttemptsTotal = 0
+  $repairAppliedTotal = 0
+  $repairBlockedTotal = 0
+
+  function Add-MetricCount {
+    param(
+      [hashtable]$Map,
+      [string]$Key
+    )
+
+    $label = if ([string]::IsNullOrWhiteSpace($Key)) { 'unknown' } else { $Key }
+    if (-not $Map.ContainsKey($label)) {
+      $Map[$label] = 0
+    }
+    $Map[$label] = [int]$Map[$label] + 1
+  }
 
   $collectConsoleEnabled = $true
   if ($PSBoundParameters.ContainsKey("CollectConsoleLog")) {
@@ -38,12 +60,18 @@ function Invoke-RepairLoopAuto {
       -EnforcePageRecognition:$EnforcePageRecognition `
       -CollectConsoleLog:$collectConsoleEnabled
 
+    Add-MetricCount -Map $detectorStatusCounts -Key ([string]$round.detector_result.detector_status)
+    Add-MetricCount -Map $issueTypeCounts -Key ([string]$round.detector_result.issue.issue_type)
+    Add-MetricCount -Map $issueSourceCounts -Key ([string]$round.detector_result.issue.source)
+    Add-MetricCount -Map $decisionActionCounts -Key ([string]$round.decision.action)
+
     if ($round.decision.action -eq "done") {
       $history += [PSCustomObject]@{
         round = $i
         action = "done"
         issue_type = [string]$round.detector_result.issue.issue_type
         detector_status = [string]$round.detector_result.detector_status
+        issue_source = [string]$round.detector_result.issue.source
       }
       $finalStatus = "success"
       $finalReason = "all_checks_passed"
@@ -56,6 +84,7 @@ function Invoke-RepairLoopAuto {
         action = "halt_manual"
         issue_type = [string]$round.detector_result.issue.issue_type
         detector_status = [string]$round.detector_result.detector_status
+        issue_source = [string]$round.detector_result.issue.source
       }
       $finalStatus = "blocked"
       $finalReason = "non_retryable_issue"
@@ -63,11 +92,20 @@ function Invoke-RepairLoopAuto {
     }
 
     $exec = Invoke-RepairActionExecutor -Issue $round.detector_result.issue -ProjectPath $ProjectPath
+    $repairAttemptsTotal++
+    Add-MetricCount -Map $repairStatusCounts -Key ([string]$exec.status)
+    if ($exec.applied) {
+      $repairAppliedTotal++
+    }
+    else {
+      $repairBlockedTotal++
+    }
     $history += [PSCustomObject]@{
       round = $i
       action = [string]$round.decision.action
       issue_type = [string]$round.detector_result.issue.issue_type
       detector_status = [string]$round.detector_result.detector_status
+      issue_source = [string]$round.detector_result.issue.source
       repair_status = [string]$exec.status
       repair_reason = [string]$exec.reason
       repair_applied = [bool]$exec.applied
@@ -85,6 +123,27 @@ function Invoke-RepairLoopAuto {
       break
     }
   }
+
+  $metrics = [pscustomobject]@{
+    source = 'repair_loop_auto'
+    page_path = $PagePath
+    project_path = $ProjectPath
+    max_rounds = $MaxRounds
+    completed_rounds = @($history).Count
+    final_status = $finalStatus
+    final_reason = $finalReason
+    detector_status_counts = $detectorStatusCounts
+    issue_type_counts = $issueTypeCounts
+    issue_source_counts = $issueSourceCounts
+    decision_action_counts = $decisionActionCounts
+    repair_status_counts = $repairStatusCounts
+    repair_attempts_total = $repairAttemptsTotal
+    repair_applied_total = $repairAppliedTotal
+    repair_blocked_total = $repairBlockedTotal
+    timestamp = (Get-Date -Format "o")
+  }
+
+  Invoke-WriteDiagnosticsMetrics -Metrics $metrics | Out-Null
 
   return [PSCustomObject]@{
     status = $finalStatus

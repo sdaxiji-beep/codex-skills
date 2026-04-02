@@ -3,9 +3,17 @@ param([hashtable]$FlowResult, [hashtable]$Context)
 . "$PSScriptRoot\wechat-build-from-prompt.ps1"
 . "$PSScriptRoot\wechat-generated-project.ps1"
 
-$built = Invoke-WechatBuildFromPrompt `
-  -Prompt "build a notebook mini program" `
-  -AutoPreview $false
+if ($null -eq $Context) {
+  $Context = @{}
+}
+
+if (-not $Context.ContainsKey('GeneratedNotebookProject')) {
+  $Context.GeneratedNotebookProject = Invoke-WechatBuildFromPrompt `
+    -Prompt "build a notebook mini program" `
+    -AutoPreview $false
+}
+
+$built = $Context.GeneratedNotebookProject
 
 $before = Get-GeneratedProjectMetadata -ProjectPath $built.project_dir
 Assert-Equal $before.appid "touristappid" "initial appid should be touristappid"

@@ -11,7 +11,7 @@ This repo supports Claude-style agent execution with explicit state-first workfl
 
 ## Safety constraints
 
-- Never modify the user business-code workspace (`D:\卤味` in this setup).
+- Never modify the user business-code workspace.
 - Use preview-first behavior for generated projects.
 - Keep `touristappid` blocked for upload/deploy.
 

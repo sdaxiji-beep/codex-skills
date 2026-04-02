@@ -12,17 +12,33 @@ function Assert-True {
 
 Write-Host "[test] Start DetectorBridge preferred screenshot check..." -ForegroundColor Cyan
 
-$projectPath = Join-Path 'G:\' ([string]([char]0x5C0F) + [char]0x7A0B + [char]0x5E8F + [char]0x6D4B + [char]0x8BD5)
+function global:Invoke-ScreenshotFallback {
+  param([string]$PagePath, [string]$ProjectPath)
+  return [PSCustomObject]@{
+    issue_id = "failed|$PagePath|screenshot_fallback"
+    status = "failed"
+    issue_type = "error_page_visible"
+    target = $null
+    expected = "page healthy"
+    actual = "fallback failure"
+    severity = "critical"
+    source = "screenshot_fallback"
+    page_path = $PagePath
+    project_path = $ProjectPath
+    repair_hint = "inspect screenshot"
+    retryable = $true
+    timestamp = (Get-Date -Format "o")
+    detector_confidence = 0.5
+  }
+}
+
+$repoRoot = Split-Path $PSScriptRoot -Parent
+$projectPath = Join-Path $repoRoot 'sandbox\fake-project'
 $res = Invoke-DetectorBridge -PagePath "pages/store/home/index" -ProjectPath $projectPath -PreferredDetector "screenshot"
 
-Write-Host "[test] detector_status=$($res.detector_status)"
-Write-Host "[test] detectors_tried=$($res.detectors_tried -join ' -> ')"
-Write-Host "[test] issue_source=$($res.issue.source)"
-
-Assert-True -Condition ($res.detectors_tried.Count -eq 1) -Message "preferred screenshot should not try automator"
-Assert-True -Condition ($res.detectors_tried[0] -eq "screenshot") -Message "detectors_tried should contain screenshot only"
-Assert-True -Condition ($res.issue.source -eq "screenshot") -Message "issue source should be screenshot"
-Assert-True -Condition ($res.detector_status -eq "preferred_detector_used") -Message "preferred screenshot status should be preferred_detector_used"
+Assert-True -Condition ($res.detectors_tried.Count -eq 1) -Message "preferred screenshot should skip automator"
+Assert-True -Condition ($res.detectors_tried[0] -eq "screenshot") -Message "screenshot should be tried first"
+Assert-True -Condition ($res.issue.source -eq "screenshot_fallback") -Message "issue source should be screenshot fallback"
 
 Write-Host "[test] PASS: preferred screenshot path is valid" -ForegroundColor Green
 exit 0

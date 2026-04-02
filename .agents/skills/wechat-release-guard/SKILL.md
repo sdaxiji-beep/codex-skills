@@ -22,7 +22,6 @@ $RepoRoot = (Get-Location).Path
 . (Join-Path $RepoRoot "scripts\wechat.ps1")
 
 powershell -ExecutionPolicy Bypass -File (Join-Path $RepoRoot "scripts\test-wechat-skill.ps1") -SkipSmoke
-Invoke-WechatReleaseSetup
 Invoke-WechatPreview -RequireConfirm $true
 Invoke-WechatUpload -RequireConfirm $true
 Invoke-DeployCloudFunction -FuncName "<name>" -RequireConfirm $true
@@ -34,4 +33,4 @@ Invoke-DeployChangedCloudFunctions -RequireConfirm $true
 - Never skip validation before release actions.
 - Never auto-deploy without explicit confirmation.
 - Never modify business code during release-only requests.
-- If real upload/deploy is requested and local release config is missing, run `Invoke-WechatReleaseSetup` first.
+

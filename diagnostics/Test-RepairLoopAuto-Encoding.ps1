@@ -60,3 +60,4 @@ Assert-Equal $app.tabBar.list[0].text "Home" "tab text should be normalized"
 
 Write-Host "[test] PASS: auto repair loop fixed encoding issue" -ForegroundColor Green
 exit 0
+

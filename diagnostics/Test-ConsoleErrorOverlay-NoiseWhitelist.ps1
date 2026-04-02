@@ -10,6 +10,7 @@ Write-Host "[test] Start ConsoleErrorOverlay noise whitelist check..." -Foregrou
 $tmp = Join-Path ([System.IO.Path]::GetTempPath()) ("console-noise-" + [guid]::NewGuid().ToString("N"))
 New-Item -ItemType Directory -Path $tmp -Force | Out-Null
 $logPath = Join-Path $tmp "latest.log"
+$repoRoot = Split-Path $PSScriptRoot -Parent
 
 @'
 游客模式
@@ -22,7 +23,7 @@ Error: SystemError (appServiceSDKScriptError)
 try {
   $issue = Invoke-ConsoleErrorOverlay `
     -PagePath "pages/cart/index" `
-    -ProjectPath "G:\codex专属" `
+    -ProjectPath $repoRoot `
     -ConsoleLogPath $logPath
 
   Assert-True ($issue.status -eq "passed") "noise-only logs should not block"

@@ -9,6 +9,7 @@ Write-Host "[test] Start ConsoleErrorOverlay compile error check..." -Foreground
 
 $tmp = Join-Path ([System.IO.Path]::GetTempPath()) ("console-overlay-" + [guid]::NewGuid().ToString("N"))
 New-Item -ItemType Directory -Path $tmp -Force | Out-Null
+$repoRoot = Split-Path $PSScriptRoot -Parent
 
 $logPath = Join-Path $tmp "latest.log"
 @'
@@ -20,7 +21,7 @@ at files://pages/cart/index.wxml#21
 try {
   $issue = Invoke-ConsoleErrorOverlay `
     -PagePath "pages/cart/index" `
-    -ProjectPath "G:\codex专属" `
+    -ProjectPath $repoRoot `
     -ConsoleLogPath $logPath
 
   Write-Host "[test] issue_status=$($issue.status)"

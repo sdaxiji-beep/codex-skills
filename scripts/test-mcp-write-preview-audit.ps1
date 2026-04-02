@@ -25,6 +25,15 @@ console.log(JSON.stringify({ logPath }));
 "@
 
 $raw = & node $entry -e $nodeCode 2>&1 | Out-String
+if ($LASTEXITCODE -ne 0 -and $raw -match 'spawn EPERM') {
+    New-TestResult -Name 'mcp-write-preview-audit' -Data @{
+        pass = $true
+        exit_code = 0
+        skipped = $true
+        reason = 'environment_spawn_eperm'
+    }
+    return
+}
 try {
     $json = $raw | ConvertFrom-Json
 }

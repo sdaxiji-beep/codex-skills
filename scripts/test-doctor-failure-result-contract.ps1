@@ -1,7 +1,20 @@
 param([hashtable]$FlowResult,[hashtable]$Context)
 . "$PSScriptRoot\wechat-doctor.ps1"
 . "$PSScriptRoot\test-common.ps1"
-$result = Invoke-WechatDoctor -SimulateWriteFailure
+
+if ($null -eq $Context) {
+    $Context = @{}
+}
+
+$result = $null
+if ($Context.ContainsKey('DoctorSimulatedFailureResult')) {
+    $result = $Context.DoctorSimulatedFailureResult
+}
+else {
+    $result = Invoke-WechatDoctor -SimulateWriteFailure
+    $Context.DoctorSimulatedFailureResult = $result
+}
+
 $hasFlag = $false
 if ($result -is [hashtable]) {
     $hasFlag = $result.ContainsKey('has_failure_summary_v2')

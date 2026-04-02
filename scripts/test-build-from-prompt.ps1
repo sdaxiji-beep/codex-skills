@@ -2,9 +2,17 @@ param([hashtable]$FlowResult, [hashtable]$Context)
 . "$PSScriptRoot\test-common.ps1"
 . "$PSScriptRoot\wechat-build-from-prompt.ps1"
 
-$r = Invoke-WechatBuildFromPrompt `
-  -Prompt "build a notebook mini program" `
-  -AutoPreview $false
+if ($null -eq $Context) {
+  $Context = @{}
+}
+
+if ($Context.ContainsKey('GeneratedNotebookProject') -and $null -ne $Context.GeneratedNotebookProject) {
+  $r = $Context.GeneratedNotebookProject
+} else {
+  $r = Invoke-WechatBuildFromPrompt `
+    -Prompt "build a notebook mini program" `
+    -AutoPreview $false
+}
 Assert-Equal $r.status "success" "build should succeed"
 Assert-Equal $r.template "notebook" "template should be notebook"
 Assert-True (Test-Path $r.project_dir) "project dir should exist"

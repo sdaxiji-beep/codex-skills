@@ -1,14 +1,139 @@
 param([hashtable]$FlowResult, [hashtable]$Context)
 . "$PSScriptRoot\test-common.ps1"
-. "$PSScriptRoot\Invoke-DiagnosticsQuickCheck.ps1"
+. "$PSScriptRoot\Get-SharedDiagnosticsQuickCheck.ps1"
 
-$scriptPath = Join-Path $PSScriptRoot 'check-release-package.ps1'
-Assert-True (Test-Path $scriptPath) 'check-release-package.ps1 should exist'
+function Get-ReleasePackageCandidateFingerprint {
+    param([string]$RepoRoot)
 
-$result = & $scriptPath
+    $manifestPath = Join-Path $RepoRoot 'release-package.manifest.json'
+    Assert-True (Test-Path $manifestPath) 'release-package.manifest.json should exist'
 
-$diagArtifactPath = Join-Path ([System.IO.Path]::GetTempPath()) ("diagnostics-quickcheck-release-" + [System.Guid]::NewGuid().ToString("N") + ".json")
-$diagSummary = Invoke-DiagnosticsQuickCheck -Quiet -OutputPath $diagArtifactPath
+    $manifest = Get-Content -Path $manifestPath -Raw -Encoding UTF8 | ConvertFrom-Json
+    $paths = New-Object System.Collections.Generic.List[string]
+    $paths.Add($manifestPath)
+
+    foreach ($relative in @(
+        '.gitignore',
+        'README.md',
+        'RELEASE_PACKAGE.md'
+    )) {
+        $candidate = Join-Path $RepoRoot $relative
+        if (Test-Path $candidate) {
+            $paths.Add($candidate)
+        }
+    }
+
+    foreach ($entry in @($manifest.include)) {
+        $fullPath = Join-Path $RepoRoot $entry
+        if (-not (Test-Path $fullPath)) {
+            continue
+        }
+
+        $item = Get-Item $fullPath -ErrorAction SilentlyContinue
+        if ($null -eq $item) {
+            continue
+        }
+
+        if ($item.PSIsContainer) {
+            Get-ChildItem -Path $fullPath -Recurse -File -ErrorAction SilentlyContinue |
+                ForEach-Object {
+                    $paths.Add($_.FullName)
+                }
+        }
+        else {
+            $paths.Add($item.FullName)
+        }
+    }
+
+    $builder = New-Object System.Collections.Generic.List[string]
+    foreach ($path in ($paths | Sort-Object -Unique)) {
+        $item = Get-Item $path -ErrorAction SilentlyContinue
+        if ($null -eq $item -or $item.PSIsContainer) {
+            continue
+        }
+
+        $builder.Add(('{0}|{1}' -f $item.FullName.ToLowerInvariant(), $item.LastWriteTimeUtc.Ticks))
+    }
+
+    $sha = [System.Security.Cryptography.SHA256]::Create()
+    try {
+        $bytes = [System.Text.Encoding]::UTF8.GetBytes(($builder -join "`n"))
+        $hash = $sha.ComputeHash($bytes)
+        return ([System.BitConverter]::ToString($hash) -replace '-', '').ToLowerInvariant()
+    }
+    finally {
+        $sha.Dispose()
+    }
+}
+
+function Get-SharedReleasePackageCandidateResult {
+    param([string]$RepoRoot)
+
+    if ([string]::IsNullOrWhiteSpace($RepoRoot)) {
+        $RepoRoot = Split-Path $PSScriptRoot -Parent
+    }
+
+    $cacheDir = Join-Path $RepoRoot 'artifacts\wechat-devtools\release-package'
+    $cachePath = Join-Path $cacheDir 'release-package-candidate-cache.json'
+    $scriptPath = Join-Path $PSScriptRoot 'check-release-package.ps1'
+    Assert-True (Test-Path $scriptPath) 'check-release-package.ps1 should exist'
+
+    $fingerprint = Get-ReleasePackageCandidateFingerprint -RepoRoot $RepoRoot
+    if (Test-Path $cachePath) {
+        try {
+            $cached = Get-Content -Path $cachePath -Raw -Encoding UTF8 | ConvertFrom-Json -ErrorAction Stop
+            if ($cached.cache_version -eq 1 -and $cached.fingerprint -eq $fingerprint -and $cached.result) {
+                return [pscustomobject]@{
+                    cachePath   = $cachePath
+                    fingerprint = $fingerprint
+                    fromCache   = $true
+                    result      = $cached.result
+                }
+            }
+        }
+        catch {
+        }
+    }
+
+    $result = & $scriptPath
+    New-Item -ItemType Directory -Path $cacheDir -Force | Out-Null
+    $payload = [pscustomobject]@{
+        cache_version = 1
+        fingerprint   = $fingerprint
+        generated_at  = (Get-Date).ToString('o')
+        result        = $result
+    }
+    $payload | ConvertTo-Json -Depth 12 | Set-Content -Path $cachePath -Encoding UTF8
+
+    return [pscustomobject]@{
+        cachePath   = $cachePath
+        fingerprint = $fingerprint
+        fromCache   = $false
+        result      = $result
+    }
+}
+
+$repoRoot = Split-Path $PSScriptRoot -Parent
+$sharedRelease = Get-SharedReleasePackageCandidateResult -RepoRoot $repoRoot
+$result = $sharedRelease.result
+
+$diagArtifactPath = $null
+$diagSummary = $null
+
+if ($null -ne $Context -and $Context.ContainsKey('DiagnosticsQuickCheckSummary') -and $Context.ContainsKey('DiagnosticsQuickCheckArtifactPath')) {
+    $diagSummary = $Context.DiagnosticsQuickCheckSummary
+    $diagArtifactPath = [string]$Context.DiagnosticsQuickCheckArtifactPath
+}
+else {
+    $sharedDiagnostics = Get-SharedDiagnosticsQuickCheckResult
+    $diagSummary = $sharedDiagnostics.summary
+    $diagArtifactPath = [string]$sharedDiagnostics.artifactPath
+
+    if ($null -ne $Context) {
+        $Context.DiagnosticsQuickCheckSummary = $diagSummary
+        $Context.DiagnosticsQuickCheckArtifactPath = $diagArtifactPath
+    }
+}
 
 Assert-True ([bool]$diagSummary.pass) 'diagnostics quickcheck should pass before release candidate passes'
 Assert-True (Test-Path $diagArtifactPath) 'diagnostics quickcheck artifact should be written'
@@ -34,4 +159,6 @@ New-TestResult -Name 'release-package-candidate' -Data @{
     diagnostics_total = $diagSummary.total
     diagnostics_passed = $diagSummary.passed
     diagnostics_artifact = $diagArtifactPath
+    release_package_cache = $sharedRelease.cachePath
+    release_package_cache_hit = $sharedRelease.fromCache
 }

@@ -32,7 +32,8 @@ function global:Invoke-AutomatorCheck {
   }
 }
 
-$projectPath = Join-Path 'G:\' ([string]([char]0x5C0F) + [char]0x7A0B + [char]0x5E8F + [char]0x6D4B + [char]0x8BD5)
+$repoRoot = Split-Path $PSScriptRoot -Parent
+$projectPath = Join-Path $repoRoot 'sandbox\fake-project'
 $res = Invoke-DetectorBridge -PagePath "pages/store/home/index" -ProjectPath $projectPath -PreferredDetector "automator"
 
 Write-Host "[test] detector_status=$($res.detector_status)"

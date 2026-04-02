@@ -1,4 +1,0 @@
-interface:
-  display_name: "WeChat Page Generator"
-  short_description: "Generate a single WeChat Mini Program page as a JSON bundle and apply it through the Generation Gate."
-  default_prompt: "Use $wechat-page-generator to implement a single WeChat Mini Program page from a page-generation spec in this repo."
