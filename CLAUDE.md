@@ -58,9 +58,9 @@ Client execution guidance:
 
 ## Validation layers
 
-- Layer 0: syntax check
-- Layer 1: focused tests
-- Layer 2: `test-p2-fast.ps1`
-- Layer 3: `test-p2-mini.ps1`
-- Layer 4: `test-wechat-skill.ps1 -SkipSmoke`
-- Layer 5: `wechat-run.ps1` with human confirmation
+- L0: `test-wechat-skill.ps1 -GuardCheckOnly`
+- L1: `test-diagnostics-focused.ps1`
+- L2: `test-wechat-skill.ps1 -SkipSmoke -Tag fast`
+- L3: `test-wechat-skill.ps1 -Tag full`
+
+Use `TEST_TIERS.md` as the source of truth for tier intent, sequencing rules, and runtime expectations.

@@ -21,6 +21,7 @@ The repo currently provides:
 - a clone-agnostic registration guide for installer/consumer setup
 
 The repo does **not** assume a specific publisher, package registry, or Git hosting URL here.
+The root `package.json` currently keeps `"private": true`, so the repo is registry-ready in structure but not yet configured for direct npm publication.
 
 ## Readiness rules
 
