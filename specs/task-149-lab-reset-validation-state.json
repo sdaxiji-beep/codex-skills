@@ -1,0 +1,50 @@
+{
+  "task": {
+    "id": "task-149",
+    "title": "Lab reset imported validation state",
+    "type": "feature"
+  },
+  "target": {
+    "files": [
+      {
+        "path": "G:\\codex测试\\miniprogram\\pages\\lab\\index.js",
+        "action": "modify"
+      },
+      {
+        "path": "G:\\codex测试\\miniprogram\\pages\\lab\\index.wxml",
+        "action": "modify"
+      }
+    ],
+    "deploy": {
+      "type": "none",
+      "functions": [],
+      "version": "1.0.0"
+    }
+  },
+  "requirements": {
+    "description": "Add a button to reset validation-related UI state without clearing the imported report payload.",
+    "acceptance": [
+      "Validation state can be reset while keeping imported report preview",
+      "Reset clears validation details, filters, and dry-run/apply snapshots",
+      "If no imported report exists, user sees a clear unavailable message"
+    ],
+    "constraints": [
+      "Only modify G:\\codex测试",
+      "Never touch D:\\卤味"
+    ]
+  },
+  "validation": {
+    "layer": 4,
+    "required_tests": []
+  },
+  "record": {
+    "enabled": true,
+    "output_path": "G:\\codex专属\\artifacts\\records"
+  },
+  "rollback": {
+    "on_validate_fail": "restore_target_files",
+    "on_deploy_fail": "notify_only",
+    "on_write_fail": "abort"
+  },
+  "auto_mode": false
+}

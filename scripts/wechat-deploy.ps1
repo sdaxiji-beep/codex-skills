@@ -62,11 +62,38 @@ function Get-WechatCliPath {
 function Invoke-WechatCliCommand {
     [CmdletBinding()]
     param(
-        [Parameter(Mandatory)][string[]]$Arguments
+        [Parameter(Mandatory)][string[]]$Arguments,
+        [int]$TimeoutMs = 120000
     )
 
     $cliPath = Get-WechatCliPath
-    $raw = (& $cliPath @Arguments 2>&1 | Out-String).Trim()
+    $stdout = [System.IO.Path]::GetTempFileName()
+    $stderr = [System.IO.Path]::GetTempFileName()
+    try {
+        $proc = Start-Process -FilePath $cliPath -ArgumentList $Arguments -PassThru -NoNewWindow `
+            -RedirectStandardOutput $stdout -RedirectStandardError $stderr
+
+        if (-not $proc.WaitForExit($TimeoutMs)) {
+            try { $proc.Kill() } catch {}
+            $stderrText = Get-Content $stderr -Raw -ErrorAction SilentlyContinue
+            $stdoutText = Get-Content $stdout -Raw -ErrorAction SilentlyContinue
+            return @{
+                raw       = (([string]$stdoutText + "`n" + [string]$stderrText).Trim())
+                parsed    = $null
+                exit_code = 124
+                success   = $false
+                timed_out = $true
+            }
+        }
+
+        $stdoutText = Get-Content $stdout -Raw -ErrorAction SilentlyContinue
+        $stderrText = Get-Content $stderr -Raw -ErrorAction SilentlyContinue
+        $raw = (([string]$stdoutText + "`n" + [string]$stderrText).Trim())
+    }
+    finally {
+        Remove-Item $stdout, $stderr -Force -ErrorAction SilentlyContinue
+    }
+
     $parsed = $null
     try {
         $parsed = $raw | ConvertFrom-Json -ErrorAction Stop
@@ -77,8 +104,9 @@ function Invoke-WechatCliCommand {
     return @{
         raw       = $raw
         parsed    = $parsed
-        exit_code = $LASTEXITCODE
-        success   = ($LASTEXITCODE -eq 0)
+        exit_code = $proc.ExitCode
+        success   = ($proc.ExitCode -eq 0)
+        timed_out = $false
     }
 }
 

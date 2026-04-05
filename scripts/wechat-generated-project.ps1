@@ -43,7 +43,12 @@ function Resolve-GeneratedProjectPath {
         $Root = Get-GeneratedProjectRoot
     }
 
-    $resolvedRoot = [System.IO.Path]::GetFullPath($Root)
+    try {
+        $resolvedRoot = (Resolve-Path -LiteralPath $Root -ErrorAction Stop).ProviderPath
+    }
+    catch {
+        $resolvedRoot = [System.IO.Path]::GetFullPath($Root)
+    }
     if ([string]::IsNullOrWhiteSpace($ProjectPath)) {
         $latest = Get-GeneratedProjectList -Root $resolvedRoot | Select-Object -First 1
         if ($null -eq $latest) {
@@ -56,7 +61,12 @@ function Resolve-GeneratedProjectPath {
         throw "generated project not found: $ProjectPath"
     }
 
-    $resolvedProject = [System.IO.Path]::GetFullPath($ProjectPath)
+    try {
+        $resolvedProject = (Resolve-Path -LiteralPath $ProjectPath -ErrorAction Stop).ProviderPath
+    }
+    catch {
+        $resolvedProject = [System.IO.Path]::GetFullPath($ProjectPath)
+    }
     if (-not $resolvedProject.StartsWith($resolvedRoot, [System.StringComparison]::OrdinalIgnoreCase)) {
         throw "project path is outside generated root: $resolvedProject"
     }

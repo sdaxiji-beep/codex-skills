@@ -1,0 +1,7 @@
+<view class="cart-summary">
+  <view class="cart-copy">
+    <text class="cart-title">Cart Summary</text>
+    <text class="cart-meta">{{count}} items | ${{total}}</text>
+  </view>
+  <button class="cart-btn">Checkout</button>
+</view>

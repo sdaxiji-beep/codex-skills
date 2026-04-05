@@ -1,7 +1,7 @@
 {
   "name": "wechat-devtools-control-mcp",
   "mcpName": "wechat-devtools-control-mcp",
-  "version": "2.0.1",
+  "version": "2.1.0-rc.1",
   "kind": "guarded-boundary-adapter",
   "entry": "scripts/wechat-mcp-server.mjs",
   "runtime": "node",
@@ -9,6 +9,7 @@
   "tools": [
     "describe_contract",
     "describe_execution_profile",
+    "run_task_pipeline",
     "validate_page_bundle",
     "apply_page_bundle",
     "validate_component_bundle",

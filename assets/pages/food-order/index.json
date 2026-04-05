@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "__FOOD_ORDER_NAV_TITLE__",
+  "usingComponents": {
+    "food-item": "/components/food-item/index",
+    "cart-summary": "/components/cart-summary/index"
+  }
+}

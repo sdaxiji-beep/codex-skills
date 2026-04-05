@@ -1,0 +1,6 @@
+<view class='product-card'>
+  <text class='badge'>{{badge}}</text>
+  <text class='title'>{{title}}</text>
+  <text class='summary'>{{summary}}</text>
+  <text class='price'>妤納{price}}</text>
+</view>

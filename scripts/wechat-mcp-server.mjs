@@ -29,6 +29,9 @@ const repoRoot = path.resolve(__dirname, '..');
 const boundaryScript = process.env.WECHAT_MCP_BOUNDARY_SCRIPT
   ? path.resolve(process.env.WECHAT_MCP_BOUNDARY_SCRIPT)
   : path.join(repoRoot, 'scripts', 'wechat-mcp-tool-boundary.ps1');
+const taskPipelineBridgeScript = process.env.WECHAT_MCP_TASK_PIPELINE_BRIDGE
+  ? path.resolve(process.env.WECHAT_MCP_TASK_PIPELINE_BRIDGE)
+  : path.join(repoRoot, 'scripts', 'wechat-mcp-pipeline-bridge.ps1');
 
 function assertPathExists(filePath, label) {
   if (!fs.existsSync(filePath)) {
@@ -37,6 +40,7 @@ function assertPathExists(filePath, label) {
 }
 
 assertPathExists(boundaryScript, 'Boundary script');
+assertPathExists(taskPipelineBridgeScript, 'Task pipeline bridge script');
 
 async function importMcpRuntime() {
   const explicitSdkRoot = process.env.WECHAT_MCP_SDK_ROOT
@@ -118,6 +122,13 @@ const boundaryPayloadSchema = z
     jsonPayload: z.string().optional(),
     jsonFilePath: z.string().optional(),
     targetWorkspace: z.string().optional()
+  })
+  .strict();
+
+const taskPipelineSchema = z
+  .object({
+    prompt: z.string().min(1),
+    open: z.boolean().optional()
   })
   .strict();
 
@@ -348,6 +359,81 @@ function formatToolResult(operation, boundaryResult) {
   };
 }
 
+function runTaskPipeline(prompt, open = false) {
+  const powershellExe = process.env.WECHAT_MCP_POWERSHELL || 'powershell';
+  const args = [
+    '-NoProfile',
+    '-ExecutionPolicy',
+    'Bypass',
+    '-File',
+    taskPipelineBridgeScript,
+    '-Prompt',
+    prompt,
+    '-Open',
+    open ? 'true' : 'false',
+    '-Output',
+    'json'
+  ];
+
+  const result = spawnSync(powershellExe, args, {
+    cwd: repoRoot,
+    encoding: 'utf8',
+    windowsHide: true,
+    maxBuffer: 20 * 1024 * 1024
+  });
+
+  const stdout = typeof result.stdout === 'string' ? result.stdout.trim() : '';
+  const stderr = typeof result.stderr === 'string' ? result.stderr.trim() : '';
+  const exitCode =
+    typeof result.status === 'number'
+      ? result.status
+      : typeof result.signal === 'string'
+        ? 1
+        : 1;
+
+  let parsed = null;
+  if (stdout) {
+    try {
+      parsed = JSON.parse(stdout);
+    } catch {
+      parsed = firstJsonObject(stdout);
+    }
+  }
+
+  if (exitCode === 0 && parsed) {
+    return {
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify(parsed, null, 2)
+        }
+      ]
+    };
+  }
+
+  return {
+    isError: true,
+    content: [
+      {
+        type: 'text',
+        text: JSON.stringify(
+          {
+            tool: 'run_task_pipeline',
+            status: 'error',
+            exit_code: exitCode,
+            stdout,
+            stderr,
+            parsed,
+            spawn_error: result.error ? String(result.error.message || result.error) : ''
+          },
+          null,
+          2
+        )
+      }
+    ]
+  };
+}
+
 function registerTool(name, description, inputSchema) {
   registeredTools.push(name);
   server.registerTool(
@@ -435,6 +521,18 @@ registerTool(
   'apply_app_json_patch',
   'Apply an app.json patch through the existing PowerShell boundary script.',
   boundaryPayloadSchema
+);
+
+registeredTools.push('run_task_pipeline');
+server.registerTool(
+  'run_task_pipeline',
+  {
+    title: 'run_task_pipeline',
+    description:
+      'Run the internal TaskSpec pipeline from natural-language prompt through translator, compiler, executor, and acceptance on the active repo-root workflow.',
+    inputSchema: taskPipelineSchema
+  },
+  async ({ prompt, open = false }) => runTaskPipeline(prompt, open)
 );
 
 const generatePagePromptArgs = {

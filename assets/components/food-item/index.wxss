@@ -1,0 +1,10 @@
+.food-item { display: flex; gap: 20rpx; padding: 24rpx; border-radius: 24rpx; background: #ffffff; box-shadow: 0 12rpx 32rpx rgba(40, 27, 20, 0.08); }
+.food-image { width: 160rpx; height: 160rpx; border-radius: 20rpx; background: #f6e7da; }
+.food-copy { flex: 1; display: flex; flex-direction: column; }
+.food-name { font-size: 32rpx; font-weight: 600; color: #2d1f18; }
+.food-desc { margin-top: 10rpx; color: #81695c; line-height: 1.6; }
+.food-meta { margin-top: 18rpx; display: flex; align-items: center; justify-content: space-between; }
+.price { font-size: 34rpx; font-weight: 700; color: #d9480f; }
+.quantity-controls { display: flex; align-items: center; gap: 12rpx; }
+.qty-btn { width: 56rpx; height: 56rpx; line-height: 56rpx; padding: 0; border-radius: 999rpx; background: #fff2e8; color: #b44c1a; }
+.qty-value { min-width: 32rpx; text-align: center; color: #573a2f; }

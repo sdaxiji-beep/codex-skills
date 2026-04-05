@@ -1,0 +1,34 @@
+{
+  "task": {
+    "id": "task-002",
+    "title": "Deploy all changed cloud functions",
+    "type": "deploy",
+    "priority": "high"
+  },
+  "target": {
+    "files": [],
+    "deploy": {
+      "type": "cloud-changed",
+      "functions": [],
+      "version": "1.0.0"
+    }
+  },
+  "requirements": {
+    "description": "Deploy all cloud functions that have git changes.",
+    "acceptance": [
+      "All changed cloud functions are deployed",
+      "Unchanged cloud functions are not touched"
+    ],
+    "constraints": [
+      "Do not modify business code"
+    ]
+  },
+  "validation": {
+    "layer": 4,
+    "required_tests": [
+      "deploy-guard"
+    ],
+    "page_checks": []
+  },
+  "auto_mode": false
+}

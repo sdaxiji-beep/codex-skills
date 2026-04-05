@@ -1,0 +1,2 @@
+.cta-wrap { padding: 16rpx 0; }
+.cta-btn { background: #ff7a45; color: #ffffff; border-radius: 999rpx; font-size: 30rpx; }

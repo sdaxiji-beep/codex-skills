@@ -1,0 +1,46 @@
+{
+  "task": {
+    "id": "task-152",
+    "title": "Lab sync restore diff into summary exports",
+    "type": "feature"
+  },
+  "target": {
+    "files": [
+      {
+        "path": "G:\\codex测试\\miniprogram\\pages\\lab\\index.js",
+        "action": "modify"
+      }
+    ],
+    "deploy": {
+      "type": "none",
+      "functions": [],
+      "version": "1.0.0"
+    }
+  },
+  "requirements": {
+    "description": "Keep restore before/after diff in state and include it in both copy summary exports.",
+    "acceptance": [
+      "Restore action stores before/after/score delta as dedicated diff data",
+      "Copy summary text appends restore diff fields when available",
+      "Copy summary JSON includes restore_diff object when available"
+    ],
+    "constraints": [
+      "Only modify G:\\codex测试",
+      "Never touch D:\\卤味"
+    ]
+  },
+  "validation": {
+    "layer": 4,
+    "required_tests": []
+  },
+  "record": {
+    "enabled": true,
+    "output_path": "G:\\codex专属\\artifacts\\records"
+  },
+  "rollback": {
+    "on_validate_fail": "restore_target_files",
+    "on_deploy_fail": "notify_only",
+    "on_write_fail": "abort"
+  },
+  "auto_mode": false
+}

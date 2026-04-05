@@ -1,7 +1,71 @@
 # WeChat DevTools Control
 
+Current release candidate: `v2.1.0-rc.1`
+
 This project turns natural-language requests into runnable WeChat mini program projects with guarded preview/deploy workflows.
 Examples in this README use repo-relative paths so they work from any clone.
+
+## Automated Workflow (Phase 5)
+
+The repo now supports an internal automated workflow for generated/local projects:
+
+- Natural Language
+- `TaskSpec`
+- translator
+- bundle compiler
+- boundary validate/apply
+- acceptance checks
+- acceptance-driven repair
+- DevTools open/preview path
+
+In short:
+
+- Natural Language -> Auto Generate -> Validate -> Auto Repair -> DevTools Preview
+
+This Phase 5 flow is currently an internal skills capability, not a public MCP contract.
+It is intended to let local clients work through the structured pipeline instead of writing files directly.
+
+See [P5_CLOSURE_SUMMARY.md](P5_CLOSURE_SUMMARY.md) for the finalized internal architecture, supported task families, and real-drill status.
+
+## Registry-first Pipeline
+
+The current internal generation stack is registry-first for migrated families:
+
+- Natural Language
+- `TaskSpec`
+- translator
+- bundle compiler
+- `assets\registry.json` lookup
+- boundary validate/apply
+- acceptance checks
+- acceptance-driven repair
+- DevTools open/preview path
+
+Registry-backed stable assets currently include:
+
+- components: `cta-button`, `product-card`, `buy-button`, `food-item`, `cart-summary`
+- page templates: `coupon-empty-state`, `product-listing`, `product-detail`, `food-order`, `food-checkout`
+
+Current registry-first architecture:
+
+- Natural Language
+- `TaskSpec`
+- translator
+- bundle compiler
+- `assets\registry.json`
+- boundary validate/apply
+- acceptance checks
+- acceptance-driven repair
+- DevTools open/preview path
+
+Cross-page capability is now verified for internal flows:
+
+- multi-page TaskSpec targets
+- registry-backed page loading for more than one page
+- app route registration for linked pages
+- navigator-based jump validation
+
+Legacy hardcoded generation paths remain in place only as fallback compatibility during migration.
 
 ## What this is
 
@@ -64,6 +128,31 @@ From an external client point of view, the minimum path is:
 - Runtime doctor: check DevTools port/API, CLI path, and generated workspace health
 - Generated project operations: list/open/preview/deploy guard/appid switch/upload dry-run
 - Validation gates: `fast` and `full`
+
+## Under Development
+
+The repo now has an internal natural-language execution chain that is not yet part of the public MCP contract:
+
+- `TaskSpec` internal IR
+- translator fallback
+- bundle compiler
+- execution bridge
+- acceptance checks
+- acceptance-driven repair loop
+
+This internal path is currently used for generated product-task families such as:
+
+- marketing empty-state pages
+- product listing
+- product detail
+- food order / checkout flow
+
+It is intended for guarded local/generated workflows first. It remains internal until the task semantics, recovery behavior, and real DevTools drill results are stable enough for public contract exposure.
+
+Agent preference:
+
+- prefer the `TaskSpec -> translator -> compiler -> executor -> acceptance -> repair` flow
+- avoid direct file mutation when the structured task pipeline can express the change
 
 ## Validation tiers
 
@@ -164,7 +253,7 @@ Next P3 step:
 
 ## Current baseline
 
-- Layer 0 syntax check: pass (`148` scripts)
+- Layer 0 syntax check: pass (`211` scripts)
 - `fast-gate`: `70/70`
 - `full`: `97/97`
 - focused shadow check: `test-generation-gate-ast-shadow.ps1` pass

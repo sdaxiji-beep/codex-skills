@@ -10,15 +10,22 @@ function Test-WechatCliPath {
     [CmdletBinding()]
     param()
 
-    $candidates = @(
-        'C:\Program Files (x86)\Tencent\微信web开发者工具\cli.bat',
-        'C:\Program Files (x86)\Tencent\微信开发者工具\cli.bat'
+    $searchRoots = @(
+        'C:\Program Files (x86)\Tencent',
+        'C:\Program Files\Tencent'
     )
-    foreach ($candidate in $candidates) {
-        if (Test-Path $candidate) {
+
+    foreach ($root in $searchRoots) {
+        if (-not (Test-Path $root)) {
+            continue
+        }
+
+        $match = Get-ChildItem -Path $root -Filter 'cli.bat' -File -Recurse -ErrorAction SilentlyContinue |
+            Select-Object -First 1
+        if ($null -ne $match) {
             return @{
                 ok   = $true
-                path = $candidate
+                path = $match.FullName
             }
         }
     }

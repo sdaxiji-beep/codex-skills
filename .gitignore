@@ -5,3 +5,7 @@ keys/
 config/local-release.config.json
 deploy-config.json
 restored-*/
+sandbox/
+diagnostics/screenshot/captures/
+AGENTS.md
+PROJECT_STATE.md

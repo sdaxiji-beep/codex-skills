@@ -1,6 +1,6 @@
 # Public API Surface
 
-Last updated: 2026-04-02
+Last updated: 2026-04-05
 
 ## Purpose
 
@@ -108,9 +108,76 @@ These are important, but should not be presented as stable public API:
 - `scripts\wechat-readonly-flow.ps1`
 - `scripts\wechat-agentic-loop.ps1`
 - `scripts\wechat-task-dispatch.ps1`
+- `scripts\wechat-task-spec.ps1`
+- `scripts\wechat-task-translator.ps1`
+- `scripts\wechat-task-bundle-compiler.ps1`
+- `scripts\wechat-task-executor.ps1`
+- `scripts\wechat-acceptance-checks.ps1`
+- `scripts\wechat-acceptance-repair-loop.ps1`
+- `scripts\wechat-env-recovery.ps1`
 - `diagnostics\Invoke-*.ps1` except `Invoke-RepairLoopAuto.ps1`
 
 These files can evolve more aggressively as internal implementation.
+
+## Internal API Surface
+
+The following internal pipeline is now a first-class implementation surface for local/generated workflows.
+
+It is intentionally not part of the public MCP contract, but it is important for client-side skill execution:
+
+- `TaskSpec`
+  - `scripts\wechat-task-spec.ps1`
+  - internal task IR for natural-language workflow planning
+- `Translator`
+  - `scripts\wechat-task-translator.ps1`
+  - resolves natural-language requests into TaskSpec and bundle-ready structure
+- `Compiler`
+  - `scripts\wechat-task-bundle-compiler.ps1`
+  - compiles TaskSpec into `page_bundle`, `component_bundle`, and `app_patch`
+- `Executor`
+  - `scripts\wechat-task-executor.ps1`
+  - bridges compiled bundle payloads into the stable boundary validate/apply flow
+- `Acceptance Checks`
+  - `scripts\wechat-acceptance-checks.ps1`
+  - validates task-level semantic completion, not just technical correctness
+- `Repair Loop`
+  - `scripts\wechat-acceptance-repair-loop.ps1`
+  - drives acceptance-based retry/repair for generated projects
+- `Asset Registry`
+  - `assets\registry.json`
+  - `schemas\wechat-asset-registry.schema.json`
+  - `scripts\wechat-asset-registry-validator.ps1`
+  - stable internal registry-first asset surface for compiler-owned components and page templates
+
+Current stable internal assets:
+
+- components
+  - `cta-button`
+  - `product-card`
+  - `buy-button`
+  - `food-item`
+  - `cart-summary`
+- page templates
+  - `coupon-empty-state`
+  - `product-listing`
+  - `product-detail`
+  - `food-order`
+  - `food-checkout`
+
+Registry-first operational note:
+
+- migrated families should prefer registry-backed page/component loading over inline compiler templates
+- legacy hardcoded generation remains compatibility-only fallback during the transition period
+- current registry-backed cross-page flow support includes:
+  - `food-order-flow`
+  - `food-order` listing page linked to `food-checkout`
+  - app route registration for both generated pages
+
+These APIs are internal:
+
+- they may evolve more quickly than the public MCP surface
+- they should not be treated as stable external boundary operations
+- they are still critical for external clients that invoke the higher-level skills workflow through `scripts\wechat.ps1`
 
 ## Test-only surface
 

@@ -1,0 +1,19 @@
+{
+  "name": "wechat-devtools-mcp-write",
+  "version": "0.1.0",
+  "kind": "guarded-write-scaffold",
+  "entry": "src/start.ts",
+  "runtime": "node+tsx",
+  "transport": "stdio",
+  "tools": [],
+  "writes_enabled": false,
+  "deploy_enabled": false,
+  "activation": {
+    "env": "WECHAT_WRITE_MCP_ENABLE",
+    "required_value": "1"
+  },
+  "registration": {
+    "default": false,
+    "local_config": "not registered"
+  }
+}

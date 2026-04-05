@@ -1,0 +1,16 @@
+.coupon-page { min-height: 100vh; padding: 32rpx; background: linear-gradient(180deg, #fff7f0 0%, #fff 48%, #fffdf8 100%); }
+.hero { margin-bottom: 36rpx; }
+.title { display: block; font-size: 48rpx; font-weight: 700; color: #2f241f; }
+.subtitle { display: block; margin-top: 12rpx; color: #8a6f63; line-height: 1.6; }
+.empty-state { padding: 32rpx; border-radius: 28rpx; background: #ffffff; box-shadow: 0 18rpx 50rpx rgba(255, 122, 69, 0.12); }
+.empty-title { display: block; font-size: 36rpx; font-weight: 600; color: #2f241f; }
+.empty-copy { display: block; margin-top: 14rpx; color: #7e6a60; line-height: 1.7; }
+.countdown-box { margin-top: 18rpx; padding: 18rpx; border-radius: 20rpx; background: #fff4eb; }
+.countdown-label { display: block; color: #a64d21; font-size: 24rpx; }
+.countdown-value { display: block; margin-top: 8rpx; font-size: 34rpx; font-weight: 700; color: #d9480f; }
+.benefits-list { margin-top: 24rpx; padding: 24rpx; border-radius: 22rpx; background: #fffaf5; border: 2rpx dashed #ffd7bf; }
+.benefits-title { display: block; margin-bottom: 14rpx; font-size: 28rpx; font-weight: 600; color: #7a4028; }
+.benefit-item { display: block; color: #8a6f63; line-height: 1.7; }
+.rules-card { margin-top: 28rpx; padding: 28rpx; border-radius: 24rpx; background: #fff; border: 2rpx solid #ffe0cf; }
+.rules-title { display: block; margin-bottom: 16rpx; font-size: 30rpx; font-weight: 600; color: #7a4028; }
+.rules-item { display: block; color: #8a6f63; line-height: 1.8; }
