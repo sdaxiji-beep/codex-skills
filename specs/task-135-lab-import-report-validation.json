@@ -1,0 +1,51 @@
+{
+  "task": {
+    "id": "task-135",
+    "title": "Lab import report validation gate",
+    "type": "feature"
+  },
+  "target": {
+    "files": [
+      {
+        "path": "G:\\codex测试\\miniprogram\\pages\\lab\\index.js",
+        "action": "modify"
+      },
+      {
+        "path": "G:\\codex测试\\miniprogram\\pages\\lab\\index.wxml",
+        "action": "modify"
+      }
+    ],
+    "deploy": {
+      "type": "none",
+      "functions": [],
+      "version": "1.0.0"
+    }
+  },
+  "requirements": {
+    "description": "Add imported report validation state, show valid or invalid and reason, and block preview/apply when invalid.",
+    "acceptance": [
+      "Imported report shows valid or invalid status",
+      "Invalid report shows reason",
+      "Preview apply changes is disabled when invalid",
+      "Apply report to editor is disabled when invalid"
+    ],
+    "constraints": [
+      "Only modify G:\\codex测试",
+      "Never touch D:\\卤味"
+    ]
+  },
+  "validation": {
+    "layer": 4,
+    "required_tests": []
+  },
+  "record": {
+    "enabled": true,
+    "output_path": "G:\\codex专属\\artifacts\\records"
+  },
+  "rollback": {
+    "on_validate_fail": "restore_target_files",
+    "on_deploy_fail": "notify_only",
+    "on_write_fail": "abort"
+  },
+  "auto_mode": false
+}

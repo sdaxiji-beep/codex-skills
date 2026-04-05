@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "__PRODUCT_LISTING_NAV_TITLE__",
+  "usingComponents": {
+    "product-card": "/components/product-card/index"
+  }
+}

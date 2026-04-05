@@ -1,0 +1,12 @@
+artifacts/
+generated/
+node_modules/
+keys/
+sandbox/
+diagnostics/screenshot/captures/
+config/local-release.config.json
+deploy-config.json
+restored-*/
+*.tgz
+AGENTS.md
+PROJECT_STATE.md

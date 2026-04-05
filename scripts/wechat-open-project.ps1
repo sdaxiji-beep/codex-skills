@@ -2,6 +2,9 @@
 param()
 
 . "$PSScriptRoot\wechat-get-port.ps1"
+if (-not (Get-Command Wait-For-DevtoolsPort -ErrorAction SilentlyContinue)) {
+    . "$PSScriptRoot\wechat-env-recovery.ps1"
+}
 
 function Invoke-OpenProject {
     param(
@@ -76,20 +79,19 @@ function Invoke-OpenProject {
         }
     }
 
-    Start-Sleep -Seconds 3
-    try {
-        Invoke-RestMethod -Uri "http://127.0.0.1:$port/v2/open" -Method GET -ErrorAction Stop | Out-Null
+    $recovery = Wait-For-DevtoolsPort -RetryCount 5 -DelaySeconds 2
+    if ([string]$recovery.status -eq 'ready') {
         return @{
             status  = 'success'
             project = $ProjectPath
-            port    = $port
+            port    = [int]$recovery.port
         }
     }
-    catch {
-        return @{
-            status = 'warning'
-            reason = 'open command sent but response could not be confirmed'
-            port   = $port
-        }
+
+    return @{
+        status = 'warning'
+        reason = 'open command sent but response could not be confirmed'
+        port   = $port
+        env_recovery = $recovery
     }
 }

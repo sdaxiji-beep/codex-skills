@@ -1,0 +1,14 @@
+<view class='detail-page'>
+  <view class='hero'>
+    <text class='title'>__PRODUCT_DETAIL_TITLE__</text>
+    <text class='subtitle'>__PRODUCT_DETAIL_SUBTITLE__</text>
+  </view>
+  <image class='product-image' src='__PRODUCT_DETAIL_IMAGE_SRC__' mode='aspectFill' />
+  <view class='detail-card'>
+    <text class='product-title'>__PRODUCT_DETAIL_PRODUCT_TITLE__</text>
+    <text class='product-description'>__PRODUCT_DETAIL_PRODUCT_DESCRIPTION__</text>
+    <text class='price'>楼__PRODUCT_DETAIL_PRICE__</text>
+    <text class='benefits-copy'>__PRODUCT_DETAIL_BENEFITS_COPY__</text>
+    <buy-button text='__PRODUCT_DETAIL_CTA_TEXT__'></buy-button>
+  </view>
+</view>

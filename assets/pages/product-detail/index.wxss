@@ -1,0 +1,10 @@
+.detail-page { min-height: 100vh; padding: 32rpx; background: linear-gradient(180deg, #fff8f1 0%, #ffffff 44%, #fffdf8 100%); }
+.hero { margin-bottom: 24rpx; }
+.title { display: block; font-size: 48rpx; font-weight: 700; color: #2a1d18; }
+.subtitle { display: block; margin-top: 10rpx; color: #7e695f; line-height: 1.6; }
+.product-image { width: 100%; height: 420rpx; border-radius: 28rpx; background: #f5e6dc; }
+.detail-card { margin-top: 24rpx; padding: 28rpx; border-radius: 24rpx; background: #ffffff; box-shadow: 0 14rpx 40rpx rgba(24, 29, 39, 0.08); }
+.product-title { display: block; font-size: 38rpx; font-weight: 600; color: #271b16; }
+.product-description { display: block; margin-top: 14rpx; color: #7d665b; line-height: 1.7; }
+.price { display: block; margin-top: 18rpx; font-size: 36rpx; font-weight: 700; color: #d9480f; }
+.benefits-copy { display: block; margin-top: 14rpx; color: #8d756b; line-height: 1.6; }

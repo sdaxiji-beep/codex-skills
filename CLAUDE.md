@@ -33,6 +33,14 @@ Core user flows:
 - `Invoke-GeneratedProjectPreview`
 - `Invoke-GeneratedProjectDeployGuard`
 
+Internal task-automation flows:
+
+- `Invoke-WechatTaskTranslator`
+- `Invoke-TaskSpecToBundle`
+- `Invoke-WechatTaskExecution`
+- `Invoke-AcceptanceChecks`
+- `Invoke-AcceptanceRepairLoop`
+
 MCP-style tool boundary entry:
 
 ```powershell
@@ -55,6 +63,17 @@ Client execution guidance:
 - auto-retry only when apply result is `gate_status=retryable_fail` (`exit_code=1`)
 - stop and escalate when `gate_status=hard_fail` (`exit_code=2`)
 - treat boundary `status=error` as input-contract failure and fix payload first
+
+Task execution guidance:
+
+- prefer the `TaskSpec` pipeline over direct file edits whenever the request can be expressed as a generated/local task workflow
+- expected order:
+  - translator
+  - compiler
+  - executor
+  - acceptance checks
+  - acceptance repair loop
+- do not bypass the translator/compiler/executor path just to write page/component files directly unless the structured path cannot represent the task
 
 ## Validation layers
 

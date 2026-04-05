@@ -18,6 +18,7 @@ try {
   $expectedTools = @(
     'describe_contract',
     'describe_execution_profile',
+    'run_task_pipeline',
     'validate_page_bundle',
     'apply_page_bundle',
     'validate_component_bundle',

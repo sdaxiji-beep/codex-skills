@@ -14,6 +14,13 @@ function Resolve-WechatTaskIntent {
         input     = $TaskText
         intent    = 'unknown'
         mode      = 'none'
+        task_family = $null
+        task_spec = $null
+        page_bundle = $null
+        component_bundle = $null
+        component_bundles = $null
+        app_patch = $null
+        translation_source = $null
         spec_path = $null
         safe      = $true
         requires_confirmation = $false
@@ -29,6 +36,39 @@ function Resolve-WechatTaskIntent {
         $route.intent = 'help'
         $route.mode = 'help'
         $route.reason = 'matched_help_keywords'
+        return [pscustomobject]$route
+    }
+
+    $marketingRecipe = Resolve-WechatMarketingEmptyStateRecipe -TaskText $text
+    if ($null -ne $marketingRecipe) {
+        $route.intent = 'generated-product'
+        $route.mode = [string]$marketingRecipe.route_mode
+        $route.reason = 'matched_marketing_empty_state_recipe'
+        return [pscustomobject]$route
+    }
+
+    $productRecipe = Resolve-WechatProductListingRecipe -TaskText $text
+    if ($null -ne $productRecipe) {
+        $route.intent = 'generated-product'
+        $route.mode = [string]$productRecipe.route_mode
+        $route.task_family = 'product-listing'
+        $route.reason = 'matched_product_listing_recipe'
+        return [pscustomobject]$route
+    }
+
+    $productDetailRecipe = Resolve-WechatProductDetailRecipe -TaskText $text
+    $translation = Invoke-WechatTaskTranslator -TaskText $text
+    if ($null -ne $translation -and $translation.status -eq 'success' -and $null -ne $translation.task_spec) {
+        $route.intent = 'generated-product'
+        $route.mode = [string]$translation.task_spec.route_mode
+        $route.task_family = [string]$translation.task_spec.task_family
+        $route.task_spec = $translation.task_spec
+        $route.page_bundle = $translation.page_bundle
+        $route.component_bundle = $translation.component_bundle
+        $route.component_bundles = $translation.component_bundles
+        $route.app_patch = $translation.app_patch
+        $route.translation_source = [string]$translation.source
+        $route.reason = [string]$translation.reason
         return [pscustomobject]$route
     }
 
@@ -141,6 +181,70 @@ function Get-WechatTaskCandidates {
             safe                  = $true
             requires_confirmation = $false
             rank                  = 1
+        }
+    }
+
+    $marketingRecipe = Resolve-WechatMarketingEmptyStateRecipe -TaskText $text
+    if ($null -ne $marketingRecipe) {
+        $candidates += [pscustomobject]@{
+            label                 = ('generated-{0}' -f $marketingRecipe.route_mode)
+            summary               = ('Create a generated {0} marketing page shell with CTA and supporting copy' -f $marketingRecipe.route_mode)
+            intent                = 'generated-product'
+            mode                  = [string]$marketingRecipe.route_mode
+            spec_path             = $null
+            safe                  = $true
+            requires_confirmation = $false
+            rank                  = 1
+        }
+    }
+
+    $productRecipe = Resolve-WechatProductListingRecipe -TaskText $text
+    if ($null -ne $productRecipe) {
+        $candidates += [pscustomobject]@{
+            label                 = 'generated-product-listing'
+            summary               = 'Create a generated product listing mini program shell with reusable product cards'
+            intent                = 'generated-product'
+            mode                  = [string]$productRecipe.route_mode
+            spec_path             = $null
+            safe                  = $true
+            requires_confirmation = $false
+            rank                  = 1
+        }
+    }
+
+    $productDetailRecipe = Resolve-WechatProductDetailRecipe -TaskText $text
+    if ($null -ne $productDetailRecipe) {
+        $candidates += [pscustomobject]@{
+            label                 = 'generated-product-detail'
+            summary               = 'Create a generated product detail mini program page with image, description, price, and add-to-cart CTA'
+            intent                = 'generated-product'
+            mode                  = [string]$productDetailRecipe.route_mode
+            spec_path             = $null
+            safe                  = $true
+            requires_confirmation = $false
+            rank                  = 1
+        }
+    }
+
+    if (($null -eq $marketingRecipe) -and ($null -eq $productRecipe) -and ($null -eq $productDetailRecipe)) {
+        $translation = Invoke-WechatTaskTranslator -TaskText $text
+        if ($null -ne $translation -and $translation.status -eq 'success' -and $null -ne $translation.task_spec) {
+            $summary = switch ([string]$translation.task_spec.task_family) {
+                'product-listing' { 'Create a translated product-listing mini program shell from natural-language intent' }
+                'marketing-empty-state' { 'Create a translated marketing empty-state mini program shell from natural-language intent' }
+                default { 'Create a translated generated-product mini program shell from natural-language intent' }
+            }
+
+            $candidates += [pscustomobject]@{
+                label                 = ('translated-{0}' -f $translation.task_spec.route_mode)
+                summary               = $summary
+                intent                = 'generated-product'
+                mode                  = [string]$translation.task_spec.route_mode
+                spec_path             = $null
+                safe                  = $true
+                requires_confirmation = $false
+                rank                  = 1
+            }
         }
     }
 
@@ -389,6 +493,84 @@ function Invoke-WechatTask {
                 intent = 'readonly-check'
                 route  = $route
                 result = $check
+            }
+        }
+        'generated-product' {
+            if ($null -ne $route.task_spec -and [string]$route.translation_source -eq 'translator') {
+                $execution = Invoke-WechatTaskExecution `
+                    -TaskSpec $route.task_spec `
+                    -PageBundle $route.page_bundle `
+                    -ComponentBundle $route.component_bundle `
+                    -ComponentBundles $route.component_bundles `
+                    -AppPatch $route.app_patch `
+                    -Preview $false
+
+                return @{
+                    status = $execution.status
+                    intent = 'generated-product'
+                    route  = $route
+                    result = $execution
+                }
+            }
+
+            switch ($route.mode) {
+                'coupon-empty-state' {
+                    $productResult = Invoke-WechatCouponEmptyStateTask -TaskText $TaskText -RunRepairLoop $true
+                    return @{
+                        status = $productResult.status
+                        intent = 'generated-product'
+                        route  = $route
+                        result = $productResult
+                    }
+                }
+                'activity-not-started' {
+                    $recipe = Resolve-WechatMarketingEmptyStateRecipe -TaskText $TaskText
+                    $productResult = Invoke-WechatMarketingEmptyStateTask -Recipe $recipe -TaskText $TaskText -RunRepairLoop $true
+                    return @{
+                        status = $productResult.status
+                        intent = 'generated-product'
+                        route  = $route
+                        result = $productResult
+                    }
+                }
+                'benefits-empty-state' {
+                    $recipe = Resolve-WechatMarketingEmptyStateRecipe -TaskText $TaskText
+                    $productResult = Invoke-WechatMarketingEmptyStateTask -Recipe $recipe -TaskText $TaskText -RunRepairLoop $true
+                    return @{
+                        status = $productResult.status
+                        intent = 'generated-product'
+                        route  = $route
+                        result = $productResult
+                    }
+                }
+                'product-listing' {
+                    $recipe = Resolve-WechatProductListingRecipe -TaskText $TaskText
+                    $productResult = Invoke-WechatProductListingTask -Recipe $recipe -TaskText $TaskText -RunRepairLoop $true
+                    return @{
+                        status = $productResult.status
+                        intent = 'generated-product'
+                        route  = $route
+                        result = $productResult
+                    }
+                }
+                'product-detail' {
+                    $recipe = Resolve-WechatProductDetailRecipe -TaskText $TaskText
+                    $productResult = Invoke-WechatProductDetailTask -Recipe $recipe -TaskText $TaskText -RunRepairLoop $true
+                    return @{
+                        status = $productResult.status
+                        intent = 'generated-product'
+                        route  = $route
+                        result = $productResult
+                    }
+                }
+                default {
+                    return @{
+                        status = 'failed'
+                        intent = 'generated-product'
+                        route  = $route
+                        error  = 'unsupported_generated_product_mode'
+                    }
+                }
             }
         }
         'spec' {

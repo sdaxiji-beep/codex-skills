@@ -1,0 +1,136 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "wechat-task-spec.schema.json",
+  "title": "WeChat Task Spec",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "task_intent",
+    "task_family",
+    "route_mode",
+    "goal",
+    "target_pages",
+    "required_components",
+    "app_patch",
+    "acceptance_checks",
+    "repair_strategy"
+  ],
+  "properties": {
+    "task_intent": {
+      "type": "string",
+      "minLength": 1
+    },
+    "task_family": {
+      "type": "string",
+      "minLength": 1
+    },
+    "route_mode": {
+      "type": "string",
+      "minLength": 1
+    },
+    "goal": {
+      "type": "string",
+      "minLength": 1
+    },
+    "target_pages": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "bundle_kind"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "pattern": "^pages\\/.+"
+          },
+          "bundle_kind": {
+            "type": "string",
+            "enum": [
+              "page"
+            ]
+          }
+        }
+      }
+    },
+    "required_components": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "bundle_kind"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "pattern": "^components\\/.+"
+          },
+          "bundle_kind": {
+            "type": "string",
+            "enum": [
+              "component"
+            ]
+          }
+        }
+      }
+    },
+    "app_patch": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "acceptance_checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "type",
+          "target"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "minLength": 1
+          },
+          "target": {
+            "type": "string",
+            "minLength": 1
+          },
+          "expected": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "repair_strategy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "family",
+        "max_rounds",
+        "supported_codes"
+      ],
+      "properties": {
+        "family": {
+          "type": "string",
+          "minLength": 1
+        },
+        "max_rounds": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "supported_codes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  }
+}

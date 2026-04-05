@@ -1,0 +1,32 @@
+{
+  "mcpServers": {
+    "wechat-readonly": {
+      "command": "node",
+      "args": [
+        "G:\\codex专属\\mcp\\wechat-devtools-mcp\\node_modules\\tsx\\dist\\cli.mjs",
+        "G:\\codex专属\\mcp\\wechat-devtools-mcp\\src\\start.ts"
+      ],
+      "description": "Readonly MCP server for local WeChat workspace"
+    },
+    "miniapp": {
+      "command": "npx",
+      "args": ["-y", "@creatoria/miniapp-mcp"],
+      "description": "WeChat Mini Program DevTools MCP",
+      "env": {
+        "WECHAT_DEVTOOLS_PORT": "auto"
+      }
+    },
+    "wechat-write-preview": {
+      "command": "node",
+      "args": [
+        "G:\\codex专属\\mcp\\wechat-devtools-mcp-write\\node_modules\\tsx\\dist\\cli.mjs",
+        "G:\\codex专属\\mcp\\wechat-devtools-mcp-write\\src\\start.ts"
+      ],
+      "description": "Guarded write MCP (phase3 first tool: preview_project)",
+      "env": {
+        "WECHAT_WRITE_MCP_ENABLE": "1",
+        "WECHAT_WRITE_TOOL_PREVIEW_ENABLE": "1"
+      }
+    }
+  }
+}

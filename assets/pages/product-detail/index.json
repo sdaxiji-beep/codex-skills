@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "__PRODUCT_DETAIL_NAV_TITLE__",
+  "usingComponents": {
+    "buy-button": "/components/buy-button/index"
+  }
+}

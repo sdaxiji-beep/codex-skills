@@ -1,0 +1,189 @@
+{
+  "schema_version": "asset_registry_v1",
+  "components": [
+    {
+      "name": "cta-button",
+      "version": "1.0.0",
+      "family": "marketing-empty-state",
+      "dependencies": [],
+      "acceptance_rules": [
+        "component_ref",
+        "cta_button"
+      ],
+      "entry_files": {
+        "wxml": "assets/components/cta-button/index.wxml",
+        "js": "assets/components/cta-button/index.js",
+        "wxss": "assets/components/cta-button/index.wxss",
+        "json": "assets/components/cta-button/index.json"
+      }
+    },
+    {
+      "name": "product-card",
+      "version": "1.0.0",
+      "family": "product-listing",
+      "dependencies": [],
+      "acceptance_rules": [
+        "component_ref",
+        "price_display"
+      ],
+      "entry_files": {
+        "wxml": "assets/components/product-card/index.wxml",
+        "js": "assets/components/product-card/index.js",
+        "wxss": "assets/components/product-card/index.wxss",
+        "json": "assets/components/product-card/index.json"
+      }
+    },
+    {
+      "name": "buy-button",
+      "version": "1.0.0",
+      "family": "product-detail",
+      "dependencies": [],
+      "acceptance_rules": [
+        "component_ref",
+        "add_to_cart_cta"
+      ],
+      "entry_files": {
+        "wxml": "assets/components/buy-button/index.wxml",
+        "js": "assets/components/buy-button/index.js",
+        "wxss": "assets/components/buy-button/index.wxss",
+        "json": "assets/components/buy-button/index.json"
+      }
+    },
+    {
+      "name": "food-item",
+      "version": "1.0.0",
+      "family": "food-order",
+      "dependencies": [],
+      "acceptance_rules": [
+        "component_ref",
+        "price_display",
+        "quantity_controls"
+      ],
+      "entry_files": {
+        "wxml": "assets/components/food-item/index.wxml",
+        "js": "assets/components/food-item/index.js",
+        "wxss": "assets/components/food-item/index.wxss",
+        "json": "assets/components/food-item/index.json"
+      }
+    },
+    {
+      "name": "cart-summary",
+      "version": "1.0.0",
+      "family": "food-order",
+      "dependencies": [],
+      "acceptance_rules": [
+        "component_ref",
+        "cart_summary"
+      ],
+      "entry_files": {
+        "wxml": "assets/components/cart-summary/index.wxml",
+        "js": "assets/components/cart-summary/index.js",
+        "wxss": "assets/components/cart-summary/index.wxss",
+        "json": "assets/components/cart-summary/index.json"
+      }
+    }
+  ],
+  "page_templates": [
+    {
+      "name": "coupon-empty-state",
+      "version": "1.0.0",
+      "family": "marketing-empty-state",
+      "dependencies": [
+        "cta-button"
+      ],
+      "acceptance_rules": [
+        "page_text",
+        "component_ref",
+        "cta_button",
+        "rules_section"
+      ],
+      "entry_files": {
+        "wxml": "assets/pages/coupon-empty-state/index.wxml",
+        "js": "assets/pages/coupon-empty-state/index.js",
+        "wxss": "assets/pages/coupon-empty-state/index.wxss",
+        "json": "assets/pages/coupon-empty-state/index.json"
+      }
+    },
+    {
+      "name": "product-listing",
+      "version": "1.0.0",
+      "family": "product-listing",
+      "dependencies": [
+        "product-card"
+      ],
+      "acceptance_rules": [
+        "page_text",
+        "component_ref",
+        "product_list"
+      ],
+      "entry_files": {
+        "wxml": "assets/pages/product-listing/index.wxml",
+        "js": "assets/pages/product-listing/index.js",
+        "wxss": "assets/pages/product-listing/index.wxss",
+        "json": "assets/pages/product-listing/index.json"
+      }
+    },
+    {
+      "name": "product-detail",
+      "version": "1.0.0",
+      "family": "product-detail",
+      "dependencies": [
+        "buy-button"
+      ],
+      "acceptance_rules": [
+        "page_text",
+        "component_ref",
+        "price_display",
+        "add_to_cart_cta",
+        "detail_image"
+      ],
+      "entry_files": {
+        "wxml": "assets/pages/product-detail/index.wxml",
+        "js": "assets/pages/product-detail/index.js",
+        "wxss": "assets/pages/product-detail/index.wxss",
+        "json": "assets/pages/product-detail/index.json"
+      }
+    },
+    {
+      "name": "food-order",
+      "version": "1.0.0",
+      "family": "food-order",
+      "dependencies": [
+        "food-item",
+        "cart-summary"
+      ],
+      "related_pages": [
+        "food-checkout"
+      ],
+      "acceptance_rules": [
+        "page_text",
+        "component_ref",
+        "food_list",
+        "price_display",
+        "cart_summary",
+        "route_link"
+      ],
+      "entry_files": {
+        "wxml": "assets/pages/food-order/index.wxml",
+        "js": "assets/pages/food-order/index.js",
+        "wxss": "assets/pages/food-order/index.wxss",
+        "json": "assets/pages/food-order/index.json"
+      }
+    },
+    {
+      "name": "food-checkout",
+      "version": "1.0.0",
+      "family": "food-order",
+      "dependencies": [],
+      "acceptance_rules": [
+        "page_text"
+      ],
+      "entry_files": {
+        "wxml": "assets/pages/food-checkout/index.wxml",
+        "js": "assets/pages/food-checkout/index.js",
+        "wxss": "assets/pages/food-checkout/index.wxss",
+        "json": "assets/pages/food-checkout/index.json"
+      }
+    }
+  ]
+}

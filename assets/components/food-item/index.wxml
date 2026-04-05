@@ -1,0 +1,15 @@
+<view class="food-item">
+  <image class="food-image" src="{{image}}" mode="aspectFill" />
+  <view class="food-copy">
+    <text class="food-name">{{name}}</text>
+    <text class="food-desc">{{description}}</text>
+    <view class="food-meta">
+      <text class="price">${{price}}</text>
+      <view class="quantity-controls">
+        <button class="qty-btn" size="mini">-</button>
+        <text class="qty-value">{{count}}</text>
+        <button class="qty-btn" size="mini">+</button>
+      </view>
+    </view>
+  </view>
+</view>

@@ -1,0 +1,1 @@
+<view class='cta-wrap'><button class='cta-btn'>{{text}}</button></view>

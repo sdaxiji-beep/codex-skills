@@ -1,7 +1,7 @@
 {
   "name": "wechat-devtools-auto-validation",
   "mcpName": "wechat-devtools-control-mcp",
-  "version": "2.0.1",
+  "version": "2.1.0-rc.1",
   "private": true,
   "description": "Public-safe WeChat DevTools MCP boundary adapter workspace",
   "main": "probe-automator.js",

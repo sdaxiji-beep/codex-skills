@@ -1,0 +1,21 @@
+{
+  "name": "wechat-devtools-mcp",
+  "version": "1.0.0",
+  "kind": "readonly",
+  "entry": "src/start.ts",
+  "runtime": "node+tsx",
+  "transport": "stdio",
+  "tools": [
+    "get_current_page",
+    "get_page_data",
+    "run_validation",
+    "list_cloud_functions",
+    "get_project_state"
+  ],
+  "writes_enabled": false,
+  "deploy_enabled": false,
+  "registration": {
+    "default": false,
+    "local_config": "G:\\codex专属\\.agent\\mcps.json"
+  }
+}

@@ -1,0 +1,5 @@
+.product-card { padding: 28rpx; border-radius: 24rpx; background: #ffffff; box-shadow: 0 14rpx 40rpx rgba(24, 29, 39, 0.08); }
+.badge { display: inline-block; padding: 8rpx 16rpx; border-radius: 999rpx; background: #ffe8d9; color: #a64d21; font-size: 22rpx; }
+.title { display: block; margin-top: 18rpx; font-size: 34rpx; font-weight: 600; color: #201815; }
+.summary { display: block; margin-top: 12rpx; color: #7d665b; line-height: 1.6; }
+.price { display: block; margin-top: 16rpx; font-size: 32rpx; font-weight: 700; color: #d9480f; }

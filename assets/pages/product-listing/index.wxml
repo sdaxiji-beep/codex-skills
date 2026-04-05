@@ -1,0 +1,15 @@
+<view class='product-page'>
+  <view class='hero'>
+    <text class='title'>__PRODUCT_LISTING_HERO_TITLE__</text>
+    <text class='subtitle'>__PRODUCT_LISTING_HERO_SUBTITLE__</text>
+  </view>
+  <view class='section'>
+    <text class='section-title'>__PRODUCT_LISTING_SECTION_TITLE__</text>
+    <view class='product-list'>
+__PRODUCT_LISTING_CARD_MARKUP__
+    </view>
+  </view>
+  <view class='footer-note'>
+    <text class='footer-copy'>__PRODUCT_LISTING_FOOTER_COPY__</text>
+  </view>
+</view>

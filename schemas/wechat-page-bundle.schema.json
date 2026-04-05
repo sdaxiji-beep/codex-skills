@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "wechat-page-bundle.schema.json",
+  "title": "WeChat Page Bundle",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "page_name",
+    "files"
+  ],
+  "properties": {
+    "page_name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "files": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "content"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "pattern": "^pages\\/.+"
+          },
+          "content": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}
