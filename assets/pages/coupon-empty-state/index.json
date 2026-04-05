@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "__MARKETING_NAV_TITLE__",
+  "usingComponents": {
+    "cta-button": "/components/cta-button/index"
+  }
+}

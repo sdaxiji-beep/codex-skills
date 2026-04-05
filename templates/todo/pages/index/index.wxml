@@ -1,0 +1,18 @@
+<view class="container">
+  <view class="header">
+    <text class="title">待办清单</text>
+  </view>
+  <view class="composer">
+    <input class="input" placeholder="输入待办事项" value="{{draft}}" bindinput="onInput" />
+    <button class="add-btn" bindtap="addItem">添加</button>
+  </view>
+
+  <view class="list">
+    <view wx:for="{{items}}" wx:key="id" class="item">
+      <checkbox checked="{{item.done}}" data-id="{{item.id}}" bindtap="toggleItem" />
+      <text class="text {{item.done ? 'done' : ''}}">{{item.text}}</text>
+      <text class="remove" data-id="{{item.id}}" bindtap="removeItem">删除</text>
+    </view>
+    <view wx:if="{{items.length === 0}}" class="empty">暂无待办</view>
+  </view>
+</view>

@@ -1,0 +1,65 @@
+﻿{
+    "task":  {
+                 "id":  "task-107-lab-preset-limit-replace",
+                 "title":  "Clarify preset limit replacement behavior",
+                 "type":  "feature"
+             },
+    "target":  {
+                   "files":  [
+                                 {
+                                     "path":  "G:\\codex测试\\miniprogram\\pages\\lab\\index.js",
+                                     "action":  "modify"
+                                 }
+                             ],
+                   "new_contents":  [
+                                        "Page({\n  data: {\n    title: \"Lab Page\",\n    description: \"Use this page for spec, write, and validation experiments.\",\n    statusText: \"Ready to call helloLab.\",\n    loading: false,\n    inputValue: \"codex-lab\",\n    selectedPreset: \"codex-lab\",\n    callCount: 0,\n    lastMessage: \"\",\n    lastSuccess: null,\n    history: [],\n    result: null,\n    presets: [\n      {\n        label: \"default\",\n        value: \"codex-lab\",\n        builtin: true\n      },\n      {\n        label: \"status-check\",\n        value: \"status-check\",\n        builtin: true\n      },\n      {\n        label: \"hello-agent\",\n        value: \"hello-agent\",\n        builtin: true\n      }\n    ],\n    modules: [\n      {\n        name: \"page routing\",\n        status: \"ready\"\n      },\n      {\n        name: \"cloud function skeleton\",\n        status: \"ready\"\n      },\n      {\n        name: \"feature sandbox\",\n        status: \"open\"\n      }\n    ]\n  },\n\n  async callHelloLab() {\n    if (!wx.cloud) {\n      this.setData({\n        statusText: \"wx.cloud is unavailable in the current runtime.\",\n        result: null\n      });\n      return;\n    }\n\n    this.setData({\n      loading: true,\n      statusText: \"Calling helloLab...\",\n      result: null\n    });\n\n    try {\n      const payload = {\n        source: \"lab-page\",\n        input: this.data.inputValue,\n        requestedAt: new Date().toISOString()\n      };\n      const response = await wx.cloud.callFunction({\n        name: \"helloLab\",\n        data: payload\n      });\n      const result = response.result || null;\n      const nextCount = this.data.callCount + 1;\n      const historyItem = {\n        input: payload.input || \"\",\n        timestamp: result \u0026\u0026 result.data ? result.data.timestamp : payload.requestedAt\n      };\n      const dedupedHistory = this.data.history.filter((item) =\u003e item.input !== historyItem.input);\r\n      const nextHistory = [historyItem].concat(dedupedHistory).slice(0, 5);\n\n      this.setData({\n        loading: false,\n        statusText: \"helloLab returned successfully.\",\n        callCount: nextCount,\n        lastMessage: result \u0026\u0026 result.data ? result.data.message : \"\",\n        lastSuccess: result \u0026\u0026 result.data ? {\n          input: payload.input || \"\",\n          message: result.data.message || \"\",\n          timestamp: result.data.timestamp || payload.requestedAt\n        } : null,\n        history: nextHistory,\n        result: result\n      });\n    } catch (error) {\n      this.setData({\n        loading: false,\n        statusText: \"helloLab call failed.\",\n        result: {\n          code: 1,\n          msg: error \u0026\u0026 error.errMsg ? error.errMsg : \"unknown_error\"\n        }\n      });\n    }\n  },\n\n  clearResult() {\n    this.setData({\n      statusText: \"Result cleared. Ready to call helloLab again.\",\n      lastMessage: \"\",\n      result: null\n    });\n  },\n\n  clearHistory() {\n    this.setData({\n      history: [],\n      statusText: \"History cleared. Ready for a fresh run.\"\n    });\n  },\n\n  useLatestHistoryInput() {\n    const latest = this.data.history[0];\n    if (!latest || !latest.input) {\n      this.setData({\n        statusText: \"No recent history input is available.\"\n      });\n      return;\n    }\n\n    this.setData({\n      inputValue: latest.input,\n      selectedPreset: \"\",\n      statusText: \"Latest history input restored.\"\n    });\n  },\n\n  savePresetValue(value, successMessage) {\n    const normalizedValue = (value || \"\").trim();\n    if (!normalizedValue) {\n      this.setData({\n        statusText: \"Type something before saving a preset.\"\n      });\n      return;\n    }\n\n    const existingPreset = this.data.presets.find((item) =\u003e item.value === normalizedValue);\n    if (existingPreset) {\n      this.setData({\n        selectedPreset: existingPreset.value,\n        statusText: \"That preset already exists.\"\n      });\n      return;\n    }\n\n    const label = normalizedValue.length \u003e 14 ? `${normalizedValue.slice(0, 14)}...` : normalizedValue;\n    const customPresets = this.data.presets.filter((item) =\u003e !item.builtin);\n    const trimmedCustomPresets = customPresets.slice(0, 2);\n    const wasTruncated = customPresets.length \u003e trimmedCustomPresets.length;\n    const builtinPresets = this.data.presets.filter((item) =\u003e item.builtin);\n    const nextPresets = builtinPresets.concat(trimmedCustomPresets, [\n      {\n        label,\n        value: normalizedValue,\n        builtin: false\n      }\n    ]);\n\n    this.setData({\n      presets: nextPresets,\n      inputValue: normalizedValue,\n      selectedPreset: normalizedValue,\n      statusText: wasTruncated\n        ? `${successMessage} Oldest custom preset was replaced.`\n        : successMessage\n    });\n  },\n\n  saveCurrentAsPreset() {\n    const value = this.data.inputValue || \"\";\n    this.savePresetValue(value, \"Custom preset saved.\");\n  },\n\n  saveSummaryAsPreset() {\n    const lastSuccess = this.data.lastSuccess;\n    if (!lastSuccess || !lastSuccess.input) {\n      this.setData({\n        statusText: \"No successful input is available to save as a preset.\"\n      });\n      return;\n    }\n\n    const existingPreset = this.data.presets.find(\n      (item) =\u003e item.value === lastSuccess.input\n    );\n    if (existingPreset) {\n      this.setData({\n        inputValue: lastSuccess.input,\n        selectedPreset: lastSuccess.input,\n        statusText: \"Summary input applied from an existing preset.\"\n      });\n      return;\n    }\n\n    this.savePresetValue(\n      lastSuccess.input,\n      \"Summary input saved as a custom preset.\"\n    );\n  },\n\n  renameSelectedPreset() {\n    const selectedValue = this.data.selectedPreset || \"\";\n    const nextValue = (this.data.inputValue || \"\").trim();\n    const selectedPreset = this.data.presets.find((item) =\u003e item.value === selectedValue);\n\n    if (!selectedPreset || selectedPreset.builtin) {\n      this.setData({\n        statusText: \"Select a custom preset before renaming it.\"\n      });\n      return;\n    }\n\n    if (!nextValue) {\n      this.setData({\n        statusText: \"Type something before renaming the selected preset.\"\n      });\n      return;\n    }\n\n    const duplicatePreset = this.data.presets.find((item) =\u003e item.value === nextValue);\n    if (duplicatePreset \u0026\u0026 duplicatePreset.value !== selectedValue) {\n      this.setData({\n        statusText: \"Another preset already uses that value.\"\n      });\n      return;\n    }\n\n    const label = nextValue.length \u003e 14 ? `${nextValue.slice(0, 14)}...` : nextValue;\n    const nextPresets = this.data.presets.map((item) =\u003e {\n      if (item.value !== selectedValue) {\n        return item;\n      }\n\n      return {\n        label,\n        value: nextValue,\n        builtin: false\n      };\n    });\n\n    this.setData({\n      presets: nextPresets,\n      inputValue: nextValue,\n      selectedPreset: nextValue,\n      statusText: \"Custom preset renamed.\"\n    });\n  },\n\n  fillPreset(event) {\n    const value = event.currentTarget.dataset.value || \"\";\n    this.setData({\n      inputValue: value,\n      selectedPreset: value,\n      statusText: \"Preset applied. Ready to call helloLab.\"\n    });\n  },\n\n  refillFromHistory(event) {\n    const value = event.currentTarget.dataset.value || \"\";\n    this.setData({\n      inputValue: value,\n      selectedPreset: \"\",\n      statusText: \"History item restored to the input box.\"\n    });\n  },\n\n  rerunHistory(event) {\n    const value = event.currentTarget.dataset.value || \"\";\n    this.setData({\n      inputValue: value,\n      selectedPreset: \"\",\n      statusText: \"History item selected. Calling helloLab again...\"\n    });\n    this.callHelloLab();\n  },\n\n  useLastSuccessInput() {\n    const lastSuccess = this.data.lastSuccess;\n    if (!lastSuccess || !lastSuccess.input) {\n      this.setData({\n        statusText: \"No successful input is available to reuse.\"\n      });\n      return;\n    }\n\n    this.setData({\n      inputValue: lastSuccess.input,\n      selectedPreset: \"\",\n      statusText: \"Last successful input restored to the input box.\"\n    });\n  },\n\n  removePreset(event) {\n    const value = event.currentTarget.dataset.value || \"\";\n    const nextPresets = this.data.presets.filter((item) =\u003e item.value !== value);\n    const remainingSelected = this.data.selectedPreset === value ? \"\" : this.data.selectedPreset;\n    const fallbackPreset = nextPresets.find((item) =\u003e item.value === \"codex-lab\");\n    const shouldFallback = !remainingSelected \u0026\u0026 fallbackPreset;\n    this.setData({\n      presets: nextPresets,\n      selectedPreset: shouldFallback ? fallbackPreset.value : remainingSelected,\n      inputValue: shouldFallback ? fallbackPreset.value : this.data.inputValue,\n      statusText: shouldFallback\n        ? \"Custom preset removed. Default preset restored.\"\n        : \"Custom preset removed.\"\n    });\n  },\n\n  restoreDefaultPreset() {\n    this.setData({\n      inputValue: \"codex-lab\",\n      selectedPreset: \"codex-lab\",\n      statusText: \"Default preset restored.\"\n    });\n  },\n\n  handleInputChange(event) {\n    this.setData({\n      inputValue: event.detail.value,\n      selectedPreset: \"\"\n    });\n  }\n});\n\r\n\r\n\r\n\r\n\r\n\r\n"
+                                    ],
+                   "deploy":  {
+                                  "type":  "none",
+                                  "functions":  [
+
+                                                ],
+                                  "version":  "1.0.0"
+                              }
+               },
+    "requirements":  {
+                         "description":  "When custom presets exceed the limit, clarify that the oldest custom preset was replaced in the status message.",
+                         "acceptance":  [
+                                            "Saving a custom preset beyond the limit keeps the newest presets and surfaces a replacement message.",
+                                            "Normal saves keep the original success message."
+                                        ],
+                         "constraints":  [
+                                             "Only modify G:\\codex测试 files.",
+                                             "Do not change deployment behavior."
+                                         ]
+                     },
+    "validation":  {
+                       "layer":  0,
+                       "command":  "node --check \"G:\\codex测试\\miniprogram\\pages\\lab\\index.js\"",
+                       "required_tests":  [
+
+                                          ]
+                   },
+    "record":  {
+                   "enabled":  true,
+                   "output_path":  "artifacts\\records",
+                   "fields":  [
+                                  "task_id",
+                                  "title",
+                                  "status",
+                                  "elapsed_s",
+                                  "validated",
+                                  "deployed",
+                                  "changes",
+                                  "timestamp"
+                              ]
+               },
+    "rollback":  {
+                     "on_validate_fail":  "restore_target_files",
+                     "on_deploy_fail":  "notify_only",
+                     "on_write_fail":  "abort"
+                 },
+    "auto_mode":  true,
+    "auto_write":  true,
+    "auto_deploy":  true
+}

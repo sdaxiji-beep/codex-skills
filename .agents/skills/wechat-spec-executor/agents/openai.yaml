@@ -1,0 +1,5 @@
+interface:
+  display_name: "WeChat Spec Executor"
+  short_description: "Execute JSON task specs through validate, write, deploy, and record pipeline."
+  default_prompt: "Use $wechat-spec-executor to execute a JSON task spec from this repository."
+

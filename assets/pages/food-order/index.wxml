@@ -1,0 +1,15 @@
+<view class="food-order-page">
+  <view class="hero">
+    <text class="title">__FOOD_ORDER_TITLE__</text>
+    <text class="subtitle">__FOOD_ORDER_SUBTITLE__</text>
+  </view>
+  <scroll-view class="category-strip" scroll-x="true" enable-flex="true">
+    __FOOD_ORDER_CATEGORY_MARKUP__
+  </scroll-view>
+  <view class="menu-list">
+__FOOD_ORDER_ITEM_MARKUP__
+  </view>
+  <view class="cart-floating">
+    <cart-summary total="__FOOD_ORDER_TOTAL__" count="__FOOD_ORDER_COUNT__"></cart-summary>
+  </view>
+</view>

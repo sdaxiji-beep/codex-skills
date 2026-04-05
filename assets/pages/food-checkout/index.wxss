@@ -1,0 +1,11 @@
+.food-checkout-page { min-height: 100vh; padding: 28rpx; background: linear-gradient(180deg, #fff8f1 0%, #ffffff 42%, #fffdf7 100%); }
+.checkout-hero { margin-bottom: 24rpx; }
+.title { display: block; font-size: 46rpx; font-weight: 700; color: #2b1d16; }
+.subtitle { display: block; margin-top: 10rpx; color: #7a6659; line-height: 1.6; }
+.checkout-card { padding: 28rpx; border-radius: 24rpx; background: #ffffff; box-shadow: 0 12rpx 32rpx rgba(40, 27, 20, 0.08); }
+.checkout-row { display: flex; justify-content: space-between; align-items: center; padding: 18rpx 0; border-bottom: 1rpx solid #f1e5da; }
+.checkout-row:last-child { border-bottom: none; }
+.label { color: #7a6659; font-size: 26rpx; }
+.value { color: #2b1d16; font-size: 28rpx; font-weight: 600; }
+.total-row .value { color: #d9480f; font-size: 34rpx; }
+.checkout-submit { margin-top: 28rpx; border-radius: 999rpx; background: #ff8b4d; color: #ffffff; font-size: 30rpx; }

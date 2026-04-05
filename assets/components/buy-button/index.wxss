@@ -1,0 +1,2 @@
+.buy-wrap { padding-top: 20rpx; }
+.buy-btn { background: #d9480f; color: #ffffff; border-radius: 999rpx; font-size: 30rpx; }

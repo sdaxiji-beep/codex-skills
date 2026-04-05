@@ -1,0 +1,36 @@
+name: ci-minimal
+
+on:
+  push:
+    branches:
+      - master
+      - "codex/**"
+  pull_request:
+
+concurrency:
+  group: ci-minimal-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  guardrails:
+    runs-on: windows-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Scope note
+        shell: pwsh
+        run: Write-Host 'CI scope: public-safe guard rails only. Local Windows + WeChat DevTools validation remains required for fast/full and preview/deploy.'
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Run minimal CI checks
+        shell: pwsh
+        run: |
+          powershell -ExecutionPolicy Bypass -File ".\scripts\test-ci-minimal.ps1"

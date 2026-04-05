@@ -1,0 +1,7 @@
+{
+  "appid": "touristappid",
+  "compileType": "miniprogram",
+  "libVersion": "3.0.0",
+  "projectname": "shoplist-app",
+  "setting": { "es6": true, "enhance": true }
+}

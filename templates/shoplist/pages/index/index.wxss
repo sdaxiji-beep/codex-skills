@@ -1,0 +1,9 @@
+.container { padding: 24rpx; }
+.header { margin-bottom: 20rpx; }
+.title { font-size: 36rpx; font-weight: bold; }
+.grid { display: flex; flex-wrap: wrap; gap: 16rpx; }
+.card { width: calc(50% - 8rpx); background: #fff; border-radius: 12rpx; padding: 16rpx; box-shadow: 0 2rpx 10rpx rgba(0,0,0,0.08); }
+.thumb { height: 160rpx; border-radius: 8rpx; background: linear-gradient(135deg, #f5f5f5, #e9e9e9); margin-bottom: 10rpx; }
+.name { display: block; font-size: 28rpx; margin-bottom: 6rpx; }
+.price { display: block; color: #e64340; margin-bottom: 10rpx; }
+.buy-btn { background: #07c160; color: #fff; font-size: 24rpx; }

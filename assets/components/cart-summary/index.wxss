@@ -1,0 +1,5 @@
+.cart-summary { display: flex; align-items: center; justify-content: space-between; padding: 22rpx 24rpx; border-radius: 999rpx; background: #2f1d15; box-shadow: 0 16rpx 40rpx rgba(47, 29, 21, 0.24); }
+.cart-copy { display: flex; flex-direction: column; }
+.cart-title { color: #fff7f2; font-size: 28rpx; font-weight: 600; }
+.cart-meta { margin-top: 6rpx; color: #f6d8c4; font-size: 22rpx; }
+.cart-btn { min-width: 180rpx; border-radius: 999rpx; background: #ff8b4d; color: #ffffff; font-size: 28rpx; }

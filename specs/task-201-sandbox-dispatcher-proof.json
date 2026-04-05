@@ -1,0 +1,60 @@
+{
+  "task": {
+    "id": "task-201-sandbox-dispatcher-proof",
+    "title": "Sandbox dispatcher controlled execution proof",
+    "type": "feature"
+  },
+  "target": {
+    "files": [
+      {
+        "path": "sandbox\\fake-project\\dispatcher-proof.txt",
+        "action": "create"
+      }
+    ],
+    "new_content": "sandbox-dispatcher-proof-v1",
+    "deploy": {
+      "type": "none",
+      "functions": [],
+      "version": "1.0.0"
+    }
+  },
+  "requirements": {
+    "description": "Prove the sandbox-only natural-language dispatcher route can execute a spec end-to-end without touching production project files.",
+    "acceptance": [
+      "dispatcher-proof.txt is written under .\\sandbox\\fake-project",
+      "validation command exits with code 0",
+      "no write occurs outside the sandbox workspace"
+    ],
+    "constraints": [
+      "sandbox only",
+      "no deployment"
+    ]
+  },
+  "validation": {
+    "layer": 0,
+    "command": "if (Test-Path '.\\sandbox\\fake-project\\dispatcher-proof.txt') { exit 0 } else { exit 1 }",
+    "required_tests": []
+  },
+  "record": {
+    "enabled": true,
+    "output_path": "artifacts\\records",
+    "fields": [
+      "task_id",
+      "title",
+      "status",
+      "elapsed_s",
+      "validated",
+      "deployed",
+      "changes",
+      "timestamp"
+    ]
+  },
+  "rollback": {
+    "on_validate_fail": "restore_target_files",
+    "on_deploy_fail": "notify_only",
+    "on_write_fail": "abort"
+  },
+  "auto_mode": true,
+  "auto_write": true,
+  "auto_deploy": true
+}

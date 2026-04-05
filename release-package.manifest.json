@@ -1,0 +1,23 @@
+{
+  "version": "release_package_v1",
+  "include": [
+    "scripts",
+    "templates",
+    ".agents/skills/wechat-devtools-control/SKILL.md",
+    "README.md",
+    "RELEASE_PACKAGE.md",
+    "EXTERNAL_CLIENT_ENTRYPOINTS.md",
+    "MCP_BOUNDARY_CONTRACT.md",
+    "package.json",
+    ".gitignore",
+    "config/local-release.config.example.json"
+  ],
+  "exclude": [
+    "artifacts",
+    "generated",
+    "node_modules",
+    "keys",
+    "config/local-release.config.json",
+    "deploy-config.json"
+  ]
+}

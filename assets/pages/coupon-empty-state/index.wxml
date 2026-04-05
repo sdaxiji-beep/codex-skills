@@ -1,0 +1,17 @@
+<view class='coupon-page'>
+  <view class='hero'>
+    <text class='title'>__MARKETING_PAGE_TITLE__</text>
+    <text class='subtitle'>__MARKETING_HERO_SUBTITLE__</text>
+  </view>
+  <view class='empty-state'>
+    <text class='empty-title'>__MARKETING_EMPTY_TITLE__</text>
+    <text class='empty-copy'>__MARKETING_EMPTY_COPY__</text>
+__MARKETING_COUNTDOWN_MARKUP__
+    <cta-button text='__MARKETING_CTA_TEXT__'></cta-button>
+  </view>
+__MARKETING_BENEFITS_MARKUP__
+  <view class='rules-card'>
+    <text class='rules-title'>__MARKETING_RULES_TITLE__</text>
+__MARKETING_RULES_ITEMS__
+  </view>
+</view>

@@ -1,0 +1,50 @@
+{
+  "task": {
+    "id": "task-146",
+    "title": "Lab copy visible validation checks",
+    "type": "feature"
+  },
+  "target": {
+    "files": [
+      {
+        "path": "G:\\codex测试\\miniprogram\\pages\\lab\\index.js",
+        "action": "modify"
+      },
+      {
+        "path": "G:\\codex测试\\miniprogram\\pages\\lab\\index.wxml",
+        "action": "modify"
+      }
+    ],
+    "deploy": {
+      "type": "none",
+      "functions": [],
+      "version": "1.0.0"
+    }
+  },
+  "requirements": {
+    "description": "Add a copy action that exports only the currently visible validation checks.",
+    "acceptance": [
+      "Validation area has a copy visible checks button",
+      "When failed-only filter is enabled, copied output includes only failed rows",
+      "When failed-only filter is disabled, copied output includes all rows"
+    ],
+    "constraints": [
+      "Only modify G:\\codex测试",
+      "Never touch D:\\卤味"
+    ]
+  },
+  "validation": {
+    "layer": 4,
+    "required_tests": []
+  },
+  "record": {
+    "enabled": true,
+    "output_path": "G:\\codex专属\\artifacts\\records"
+  },
+  "rollback": {
+    "on_validate_fail": "restore_target_files",
+    "on_deploy_fail": "notify_only",
+    "on_write_fail": "abort"
+  },
+  "auto_mode": false
+}

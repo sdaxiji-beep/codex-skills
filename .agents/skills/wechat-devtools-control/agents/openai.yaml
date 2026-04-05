@@ -1,0 +1,17 @@
+interface:
+  display_name: "WeChat DevTools Control"
+  short_description: "Bootstrap, doctor, create, preview, and guarded generated-project operations for WeChat DevTools."
+  default_prompt: "Use $wechat-devtools-control to bootstrap this repo and create a WeChat mini program from a natural-language prompt."
+  workbook_reference: "AI_WORKBOOK.md"
+  schema_references:
+    task_spec: "schemas/wechat-task-spec.schema.json"
+    page_bundle: "schemas/wechat-page-bundle.schema.json"
+    component_bundle: "schemas/wechat-component-bundle.schema.json"
+  generation_flow:
+    - "Act as Translator plus Repair Loop operator for generated/local task workflows."
+    - "Read AI_WORKBOOK.md before attempting natural-language task execution."
+    - "Translate natural-language intent into TaskSpec first."
+    - "Compile TaskSpec into page/component/app bundle payloads."
+    - "Run validate_* before apply_*."
+    - "If validation fails, revise the payload instead of writing files directly."
+    - "Run acceptance checks after apply and use the repair loop when acceptance fails."

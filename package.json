@@ -1,0 +1,28 @@
+{
+  "name": "wechat-devtools-auto-validation",
+  "mcpName": "wechat-devtools-control-mcp",
+  "version": "2.1.0-rc.1",
+  "private": true,
+  "description": "Public-safe WeChat DevTools MCP boundary adapter workspace",
+  "main": "probe-automator.js",
+  "scripts": {
+    "probe": "node probe-automator.js",
+    "mcp:smoke": "node ./scripts/wechat-mcp-server.mjs",
+    "mcp:distribution-acceptance": "powershell -ExecutionPolicy Bypass -File ./scripts/test-wechat-mcp-distribution-acceptance.ps1",
+    "mcp:installer-readiness": "powershell -ExecutionPolicy Bypass -File ./scripts/test-wechat-mcp-installer-readiness.ps1",
+    "mcp:registration-guidance": "powershell -ExecutionPolicy Bypass -File ./scripts/test-wechat-mcp-registration-guidance.ps1"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "wechat",
+    "miniprogram",
+    "devtools"
+  ],
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.18.0",
+    "acorn": "^8.16.0",
+    "miniprogram-automator": "^0.12.1",
+    "zod": "^3.25.76"
+  }
+}

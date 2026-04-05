@@ -1,0 +1,9 @@
+.product-page { min-height: 100vh; padding: 32rpx; background: linear-gradient(180deg, #fffaf5 0%, #ffffff 42%, #fffdf8 100%); }
+.hero { margin-bottom: 30rpx; }
+.title { display: block; font-size: 48rpx; font-weight: 700; color: #231814; }
+.subtitle { display: block; margin-top: 12rpx; color: #7b665c; line-height: 1.6; }
+.section { margin-top: 12rpx; }
+.section-title { display: block; margin-bottom: 20rpx; font-size: 30rpx; font-weight: 600; color: #8b4513; }
+.product-list { display: flex; flex-direction: column; gap: 20rpx; }
+.footer-note { margin-top: 28rpx; }
+.footer-copy { display: block; color: #8d756b; line-height: 1.6; }

@@ -1,0 +1,21 @@
+<view class='food-checkout-page'>
+  <view class='checkout-hero'>
+    <text class='title'>__FOOD_CHECKOUT_TITLE__</text>
+    <text class='subtitle'>__FOOD_CHECKOUT_SUBTITLE__</text>
+  </view>
+  <view class='checkout-card'>
+    <view class='checkout-row'>
+      <text class='label'>Items</text>
+      <text class='value'>__FOOD_CHECKOUT_COUNT__ dishes</text>
+    </view>
+    <view class='checkout-row'>
+      <text class='label'>Delivery</text>
+      <text class='value'>Express pickup in 20 min</text>
+    </view>
+    <view class='checkout-row total-row'>
+      <text class='label'>Total</text>
+      <text class='value'>__FOOD_CHECKOUT_TOTAL__</text>
+    </view>
+  </view>
+  <button class='checkout-submit'>__FOOD_CHECKOUT_CTA__</button>
+</view>
